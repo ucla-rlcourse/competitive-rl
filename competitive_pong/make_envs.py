@@ -28,7 +28,7 @@ import shutil
 
 import gym
 
-from competitive_pong import register_competitive_envs
+from competitive_pong.register import register_competitive_envs
 from competitive_pong.competitive_pong_env import TournamentEnvWrapper
 from competitive_pong.utils import DummyVecEnv, SubprocVecEnv
 from competitive_pong.utils.atari_wrappers import make_env_a2c_atari
