@@ -95,16 +95,6 @@ if __name__ == '__main__':
     tournament_envs.reset()
     tournament_envs.step([0, 1, 2])
 
-    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=3,
-                                log_dir="tmp", asynchronous=False)
-    tournament_envs.reset()
-    tournament_envs.step([0, 1, 0])
-
-    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=1,
-                                log_dir="tmp", asynchronous=False)
-    tournament_envs.reset()
-    tournament_envs.step(0)
-
     double_envs = make_envs("CompetitivePongDouble-v0", num_envs=3,
                             log_dir="tmp", asynchronous=True)
     double_envs.reset()
@@ -121,5 +111,29 @@ if __name__ == '__main__':
                      asynchronous=False)
     envs.reset()
     obs, rew, done, info = envs.step([0, 1, 2])
+
+    # Test consistency between CompetitivePongTournament and CompetitivePong
+    envs = make_envs("CompetitivePong-v0", num_envs=3, log_dir="tmp",
+                     asynchronous=False)
+
+    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=3,
+                                log_dir="tmp", asynchronous=False)
+    assert envs.reset().shape == tournament_envs.reset().shape
+    o1, r1, d1, i1 = envs.step([0, 1, 0])
+    o2, r2, d2, i2 = tournament_envs.step([0, 1, 0])
+    assert o1.shape == o2.shape
+    assert r1.shape == r2.shape, (r1.shape, r2.shape)
+    assert d1.shape == d2.shape, (d1.shape, d2.shape)
+
+    envs = make_envs("CompetitivePong-v0", num_envs=1, log_dir="tmp",
+                     asynchronous=False)
+    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=1,
+                                log_dir="tmp", asynchronous=False)
+    assert envs.reset().shape == tournament_envs.reset().shape
+    o1, r1, d1, i1 = envs.step([0])
+    o2, r2, d2, i2 = tournament_envs.step([0])
+    assert o1.shape == o2.shape
+    assert r1.shape == r2.shape, (r1.shape, r2.shape)
+    assert d1.shape == d2.shape, (d1.shape, d2.shape)
 
     shutil.rmtree("./tmp", ignore_errors=True)

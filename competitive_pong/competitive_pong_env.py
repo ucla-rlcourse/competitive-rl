@@ -28,7 +28,9 @@ class TournamentEnvWrapper:
 
         obs, rew, done, info = self.env.step(tuple_action)
         self.prev_opponent_obs = obs[1]
-        return obs[0], rew[:, 0], done, info
+        if done.ndim == 2:
+            done = done[:, 0]
+        return obs[0], rew[:, 0].reshape(-1, 1), done.reshape(-1, 1), info
 
     def reset(self, **kwargs):
         obs = self.env.reset(**kwargs)
