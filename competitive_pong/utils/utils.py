@@ -267,22 +267,22 @@ class PrintConsole:
                 % (envName, gameResult[1][3] / self._number_of_episode)
             )
         else:
-            print("[%s] Win:\t\t\t\t%d" % (envName, gameResult[0]))
-            print("[%s] Draw:\t\t\t\t%d" % (envName, gameResult[1]))
-            print("[%s] Lose:\t\t\t\t%d" % (envName, gameResult[2]))
+            print("[%s] Win:\t%d" % (envName, gameResult[0]))
+            print("[%s] Draw:\t%d" % (envName, gameResult[1]))
+            print("[%s] Lose:\t%d" % (envName, gameResult[2]))
             print(
-                "[%s] Win Rate:\t\t\t%.2f"
+                "[%s] Win Rate:\t%.2f"
                 % (envName, gameResult[0] / self._number_of_episode)
             )
             print("[%s] Cumulative Reward:\t%.3f" % (envName, gameResult[3]))
             print(
-                "[%s] Episode Reward:\t\t%.3f"
+                "[%s] Episode Reward:\t%.3f"
                 % (envName, gameResult[3] / self._number_of_episode)
             )
             print(
-                "[{}] Total Matches:\t\t{}".format(envName,
-                                                   sum(gameResult[0: 3])))
+                "[{}] Total Matches:\t{}".format(envName,
+                                                 sum(gameResult[0: 3])))
         if print_time:
-            print("[{}] Test time:\t\t\t{:.2f}".format(envName,
-                                                       time.time() -
-                                                       self.start_time))
+            print("[{}] Test time:\t{:.2f}".format(envName,
+                                                   time.time() -
+                                                   self.start_time))
