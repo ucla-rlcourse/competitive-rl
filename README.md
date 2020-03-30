@@ -1,7 +1,8 @@
 # Competitive Pong Environment
 
-Competitive Pong environment is used for course assignment in IERG6130. This environment was originally developed by Belly Ho and Joe Lam, undergraduate students at CUHK, as their Final Year Project (FYP) with Prof. Zhou Bolei.
-Course TA Peng Zhenghao modified the environment to aggregate it into the assignment.
+![Competitive Pong](resources/animation.gif)
+
+Competitive Pong environment is used for course assignment in IERG6130. This environment was originally developed by Belly Ho and Joe Lam, undergraduate students at CUHK, as their Final Year Project (FYP) with Prof. Zhou Bolei. Course TA Peng Zhenghao modified the environment to aggregate it into the assignment.
 
 ## Installation
 
