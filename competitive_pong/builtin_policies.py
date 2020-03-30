@@ -23,7 +23,7 @@ import os.path as osp
 import gym
 import numpy as np
 
-from competitive_pong.competitive_pong_env import CHEAT_CODES
+from competitive_pong.base_pong_env import CHEAT_CODES
 from competitive_pong.utils.policy_serving import Policy
 
 BUILTIN_AGENT_NAMES = [
@@ -36,7 +36,7 @@ BUILTIN_AGENT_NAMES = [
 ]
 
 # Hard-coded
-single_obs_space = gym.spaces.Box(1, 42, 42)
+single_obs_space = gym.spaces.Box(0, 255, (1, 42, 42))
 single_act_space = gym.spaces.Discrete(3)
 
 

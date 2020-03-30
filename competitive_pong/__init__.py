@@ -1,4 +1,4 @@
-from competitive_pong.competitive_pong_env import PongSinglePlayerEnv, \
+from competitive_pong.base_pong_env import PongSinglePlayerEnv, \
     PongDoublePlayerEnv
 from competitive_pong.evaluate import evaluate_two_policies, \
     evaluate_two_policies_in_batch

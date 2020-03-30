@@ -29,6 +29,7 @@ import shutil
 import gym
 
 from competitive_pong import register_competitive_envs
+from competitive_pong.competitive_pong_env import TournamentEnvWrapper
 from competitive_pong.utils import DummyVecEnv, SubprocVecEnv
 from competitive_pong.utils.atari_wrappers import make_env_a2c_atari
 
@@ -64,11 +65,18 @@ def make_envs(env_id="CompetitivePong-v0", seed=0, log_dir="data", num_envs=5,
     :return: A vectorized environment
     """
     asynchronous = asynchronous and num_envs > 1
+
     if env_id == "CartPole-v0":
         print("Setup easy environment CartPole-v0 for testing.")
         envs = [lambda: gym.make("CartPole-v0") for i in range(num_envs)]
         envs = SubprocVecEnv(envs) if asynchronous else DummyVecEnv(envs)
         return envs
+
+    if env_id == "CompetitivePongTournament-v0":
+        envs = make_envs("CompetitivePongDouble-v0", seed, log_dir, num_envs,
+                         asynchronous, resized_dim)
+        return TournamentEnvWrapper(envs, num_envs)
+
     if log_dir:
         os.makedirs(log_dir, exist_ok=True)
     envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim) for i in
@@ -82,6 +90,21 @@ def make_envs(env_id="CompetitivePong-v0", seed=0, log_dir="data", num_envs=5,
 
 if __name__ == '__main__':
     # Testing
+    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=3,
+                                log_dir="tmp", asynchronous=True)
+    tournament_envs.reset()
+    tournament_envs.step([0, 1, 2])
+
+    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=3,
+                                log_dir="tmp", asynchronous=False)
+    tournament_envs.reset()
+    tournament_envs.step([0, 1, 0])
+
+    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=1,
+                                log_dir="tmp", asynchronous=False)
+    tournament_envs.reset()
+    tournament_envs.step(0)
+
     double_envs = make_envs("CompetitivePongDouble-v0", num_envs=3,
                             log_dir="tmp", asynchronous=True)
     double_envs.reset()

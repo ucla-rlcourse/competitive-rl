@@ -1,6 +1,6 @@
 from gym.envs.registration import register
 
-from competitive_pong.competitive_pong_env import PongSinglePlayerEnv, \
+from competitive_pong.base_pong_env import PongSinglePlayerEnv, \
     PongDoublePlayerEnv
 
 
