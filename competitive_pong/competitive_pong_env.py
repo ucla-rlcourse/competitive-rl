@@ -15,17 +15,17 @@ class TournamentEnvWrapper:
             if agent_name != "ALPHA_PONG"
         }
         self.agent_names = list(self.agents)
-        self.current_agent = random.choice(self.agent_names)
         self.prev_opponent_obs = None
+        self.current_agent = self.agents["RULE_BASED"]
+
+    def reset_opponent(self):
+        self.current_agent = self.agents[random.choice(self.agent_names)]
 
     def step(self, action):
         tuple_action = np.stack([
             np.asarray(action).reshape(-1),
-            np.asarray(
-                self.agents[self.current_agent](self.prev_opponent_obs)
-            ).reshape(-1)
+            np.asarray(self.current_agent(self.prev_opponent_obs)).reshape(-1)
         ], axis=1)
-
         obs, rew, done, info = self.env.step(tuple_action)
         self.prev_opponent_obs = obs[1]
         if done.ndim == 2:
