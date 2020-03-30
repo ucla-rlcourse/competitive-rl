@@ -17,6 +17,8 @@ class TournamentEnvWrapper:
         self.agent_names = list(self.agents)
         self.prev_opponent_obs = None
         self.current_agent = self.agents["RULE_BASED"]
+        self.observation_space = env.observation_space[0]
+        self.action_space = env.action_space[0]
 
     def reset_opponent(self):
         self.current_agent = self.agents[random.choice(self.agent_names)]
