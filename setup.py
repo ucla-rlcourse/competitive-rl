@@ -5,6 +5,8 @@ setup(
     packages=['competitive_pong'],
     install_requires=[
         "gym",
-        "pygame"
-    ],
+        "pygame",
+        "opencv-python",
+        'numpy'
+    ]
 )
