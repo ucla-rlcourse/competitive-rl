@@ -1,6 +1,7 @@
 import random
 
 import numpy as np
+
 from competitive_pong.builtin_policies import get_compute_action_function, \
     get_builtin_agent_names
 
@@ -21,8 +22,15 @@ class TournamentEnvWrapper:
         self.action_space = env.action_space[0]
         self.num_envs = num_envs
 
-    def reset_opponent(self):
-        self.current_agent_name = random.choice(self.agent_names)
+    def get_agent_names(self):
+        return self.agent_names
+
+    def reset_opponent(self, agent_name=None):
+        if agent_name is None:
+            self.current_agent_name = random.choice(self.agent_names)
+        else:
+            assert agent_name in self.agent_names, self.agent_names
+            self.current_agent_name = agent_name
         self.current_agent = self.agents[self.current_agent_name]
 
     def step(self, action):
