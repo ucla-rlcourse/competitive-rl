@@ -41,10 +41,10 @@ In `CompetitivePongDouble-v0` environment, both agents receive observations show
 We provide a set of trained agents to serve as opponents. We prepared 6 level builtin agents, including:
 
 1. `RANDOM` - A random agent
-2. `RULE_BASED` - Rule_based agent that serves as the right agent in `CompetitivePong-v0`
-3. `WEAK` - Weak agent with a small neural network than yours
-4. `MEDIUM` - Medium agent with a small neural network
-5. `STRONG` - Strong agent with a large neural network as yours
+2. `RULE_BASED` - Rule-based agent that serves as the right-side agent in `CompetitivePong-v0`
+3. `WEAK` - Weak-level agent with a smaller neural network than yours
+4. `MEDIUM` - Medium-level agent with a small neural network
+5. `STRONG` - Strong-level agent with a large neural network as yours
 6. `ALPHA_PONG` - Boss-level agent that is well trained and may hard to beat down, use a large neural network as yours
 
 You can visualize the performance of arbitrary builtin agents and let them play against each other. Run the script:
