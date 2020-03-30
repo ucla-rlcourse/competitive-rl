@@ -1,4 +1,5 @@
 import logging
+import os
 
 import numpy as np
 import torch
@@ -11,23 +12,6 @@ class Policy:
     def __init__(self, single_obs_space, single_action_space, num_envs,
                  checkpoint_path="", frame_stack=4,
                  use_light_model=False):
-
-        # self.device = config.device
-        # self.config = config
-        # self.lr = config.LR
-        # self.num_envs = config.num_envs
-        # self.value_loss_weight = config.value_loss_weight
-        # self.entropy_loss_weight = config.entropy_loss_weight
-        # self.num_steps = config.num_steps
-        # self.grad_norm_max = config.grad_norm_max
-
-        # if isinstance(env.observation_space, gym.spaces.Tuple):
-        #     num_feats = env.observation_space[0].shape
-        #     self.num_actions = env.action_space[0].n
-        # else:
-        #     num_feats = env.observation_space.shape
-        #     self.num_actions = env.action_space.n
-
         self.num_envs = num_envs
         self.obs_shape = single_obs_space.shape
 
@@ -46,7 +30,9 @@ class Policy:
         self.model.train()
 
         if checkpoint_path:
-            pass
+            assert os.path.isfile(checkpoint_path)
+            state_dict = torch.load(checkpoint_path, self.device)
+            self.model.load_state_dict(state_dict["model"])
         else:
             logging.warning("Loading a policy without checkpoint!")
 
@@ -56,6 +42,9 @@ class Policy:
         self.frame_stack = FrameStackTensor(
             self.num_envs, self.obs_shape, 4, self.device
         )
+
+    def reset(self):
+        self.frame_stack.reset()
 
     def compute_action(self, obs, deterministic=True):
         if isinstance(obs, np.ndarray):

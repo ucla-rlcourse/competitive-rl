@@ -152,6 +152,9 @@ class FrameStackTensor:
         self.mask_shape[0] = -1
         self.device = device
 
+    def reset(self):
+        self.current_obs.fill_(0)
+
     def update(self, obs, mask=None):
         """current_obs is a tensor with shape [num_envs, num_stacks, 84, 84].
         It keeps rolling at second dimension in order to stack the latest
