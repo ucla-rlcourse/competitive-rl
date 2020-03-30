@@ -59,31 +59,29 @@ def get_random_policy(num_envs=1):
 
 
 def get_compute_action_function(agent_name, num_envs=1):
+    resource_dir = osp.join(osp.dirname(osp.dirname(__file__)), "resources")
     if agent_name == "STRONG":
         return Policy(
             single_obs_space, single_act_space, num_envs,
-            osp.join(osp.dirname(__file__), "resources",
-                     "checkpoint-strong.pkl"),
+            osp.join(resource_dir, "checkpoint-strong.pkl"),
             use_light_model=False
         )
     if agent_name == "MEDIUM":
         return Policy(
             single_obs_space, single_act_space, num_envs,
-            osp.join(osp.dirname(__file__), "resources",
-                     "checkpoint-medium.pkl"),
+            osp.join(resource_dir, "checkpoint-medium.pkl"),
             use_light_model=True
         )
     if agent_name == "ALPHA_PONG":
         return Policy(
             single_obs_space, single_act_space, num_envs,
-            osp.join(osp.dirname(__file__), "resources",
-                     "checkpoint-alphapong.pkl"),
+            osp.join(resource_dir, "checkpoint-alphapong.pkl"),
             use_light_model=False
         )
     if agent_name == "WEAK":
         return Policy(
             single_obs_space, single_act_space, num_envs,
-            osp.join(osp.dirname(__file__), "resources", "checkpoint-weak.pkl"),
+            osp.join(resource_dir, "checkpoint-weak.pkl"),
             use_light_model=True
         )
     if agent_name == "RANDOM":

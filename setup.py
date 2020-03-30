@@ -8,8 +8,5 @@ setup(
         "pygame",
         "opencv-python",
         'numpy'
-    ],
-    extras_require={
-        "builtin": []
-    }
+    ]
 )
