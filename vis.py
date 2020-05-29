@@ -25,7 +25,7 @@ if __name__ == '__main__':
     assert args.right in agent_names, agent_names
 
     # create env and setup policies
-    env = make_envs("CompetitivePongDouble-v0", num_envs=1, asynchronous=False,
+    env = make_envs("cPongDouble-v0", num_envs=1, asynchronous=False,
                     log_dir="tmp_vis").envs[0]
     left = get_compute_action_function(args.left)
     right = get_compute_action_function(args.right)

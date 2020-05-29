@@ -25,11 +25,12 @@ Instructor: Professor ZHOU Bolei. Assignment author: PENG Zhenghao.
 """
 import os
 import shutil
+import warnings
 
 import gym
 
-from competitive_pong.register import register_competitive_envs
 from competitive_pong.competitive_pong_env import TournamentEnvWrapper
+from competitive_pong.register import register_competitive_envs
 from competitive_pong.utils import DummyVecEnv, SubprocVecEnv
 from competitive_pong.utils.atari_wrappers import make_env_a2c_atari
 
@@ -48,7 +49,23 @@ such error. We return envs = None now.
 """
 
 
-def make_envs(env_id="CompetitivePong-v0", seed=0, log_dir="data", num_envs=5,
+def _verify_env_id(env_id):
+    replace_names = {
+        "CompetitivePongTournament-v0": "cPongTournament-v0",
+        "CompetitivePongDouble-v0": "cPongDouble-v0",
+        "CompetitivePong-v0": "cPong-v0"
+    }
+    msg = "Environment id {} is deprecated. Please use the short version {}."
+    if env_id in replace_names:
+        warnings.warn(msg.format(env_id, replace_names[env_id]))
+        env_id = replace_names[env_id]
+    assert env_id in [
+        "cPongTournament-v0", "cPongDouble-v0", "cPong-v0", "CartPole-v0"
+    ]
+    return env_id
+
+
+def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=5,
               asynchronous=True, resized_dim=42):
     """
     Create CUHKPong-v0, CUHKPongDouble-v0 or CartPole-v0 environments. If
@@ -66,14 +83,16 @@ def make_envs(env_id="CompetitivePong-v0", seed=0, log_dir="data", num_envs=5,
     """
     asynchronous = asynchronous and num_envs > 1
 
+    env_id = _verify_env_id(env_id)
+
     if env_id == "CartPole-v0":
         print("Setup easy environment CartPole-v0 for testing.")
         envs = [lambda: gym.make("CartPole-v0") for i in range(num_envs)]
         envs = SubprocVecEnv(envs) if asynchronous else DummyVecEnv(envs)
         return envs
 
-    if env_id == "CompetitivePongTournament-v0":
-        envs = make_envs("CompetitivePongDouble-v0", seed, log_dir, num_envs,
+    if env_id == "cPongTournament-v0":
+        envs = make_envs("cPongDouble-v0", seed, log_dir, num_envs,
                          asynchronous, resized_dim)
         return TournamentEnvWrapper(envs, num_envs)
 
@@ -90,33 +109,33 @@ def make_envs(env_id="CompetitivePong-v0", seed=0, log_dir="data", num_envs=5,
 
 if __name__ == '__main__':
     # Testing
-    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=3,
+    tournament_envs = make_envs("cPongTournament-v0", num_envs=3,
                                 log_dir="tmp", asynchronous=True)
     tournament_envs.reset()
     tournament_envs.step([0, 1, 2])
 
-    double_envs = make_envs("CompetitivePongDouble-v0", num_envs=3,
+    double_envs = make_envs("cPongDouble-v0", num_envs=3,
                             log_dir="tmp", asynchronous=True)
     double_envs.reset()
     double_obs_a, double_rew_a, double_done_a, double_info_a = double_envs.step(
         [[0, 0], [1, 0], [2, 1]])
 
-    double_envs = make_envs("CompetitivePongDouble-v0", num_envs=3,
+    double_envs = make_envs("cPongDouble-v0", num_envs=3,
                             log_dir="tmp", asynchronous=False)
     double_envs.reset()
     double_obs, double_rew, double_done, double_info = double_envs.step(
         [[0, 0], [1, 0], [2, 1]])
 
-    envs = make_envs("CompetitivePong-v0", num_envs=3, log_dir="tmp",
+    envs = make_envs("cPong-v0", num_envs=3, log_dir="tmp",
                      asynchronous=False)
     envs.reset()
     obs, rew, done, info = envs.step([0, 1, 2])
 
-    # Test consistency between CompetitivePongTournament and CompetitivePong
-    envs = make_envs("CompetitivePong-v0", num_envs=3, log_dir="tmp",
+    # Test consistency between cPongTournament and cPong
+    envs = make_envs("cPong-v0", num_envs=3, log_dir="tmp",
                      asynchronous=False)
 
-    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=3,
+    tournament_envs = make_envs("cPongTournament-v0", num_envs=3,
                                 log_dir="tmp", asynchronous=False)
     assert envs.reset().shape == tournament_envs.reset().shape
     o1, r1, d1, i1 = envs.step([0, 1, 0])
@@ -125,9 +144,9 @@ if __name__ == '__main__':
     assert r1.shape == r2.shape, (r1.shape, r2.shape)
     assert d1.shape == d2.shape, (d1.shape, d2.shape)
 
-    envs = make_envs("CompetitivePong-v0", num_envs=1, log_dir="tmp",
+    envs = make_envs("cPong-v0", num_envs=1, log_dir="tmp",
                      asynchronous=False)
-    tournament_envs = make_envs("CompetitivePongTournament-v0", num_envs=1,
+    tournament_envs = make_envs("cPongTournament-v0", num_envs=1,
                                 log_dir="tmp", asynchronous=False)
     assert envs.reset().shape == tournament_envs.reset().shape
     o1, r1, d1, i1 = envs.step([0])
