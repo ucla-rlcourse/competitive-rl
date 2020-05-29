@@ -25,6 +25,7 @@ Instructor: Professor ZHOU Bolei. Assignment author: PENG Zhenghao.
 """
 import os
 import shutil
+import warnings
 
 import gym
 
@@ -47,11 +48,21 @@ notebook, please set the num_envs to 1, i.e. make_envs(num_envs=1) to avoid
 such error. We return envs = None now.
 """
 
-replace_names = {
-    "cPongTournament-v0": "cPongTournament-v0",
-    "cPongDouble-v0": "cPongDouble-v0",
-    "cPong-v0": "cPong-v0"
-}
+
+def _verify_env_id(env_id):
+    replace_names = {
+        "CompetitivePongTournament-v0": "cPongTournament-v0",
+        "CompetitivePongDouble-v0": "cPongDouble-v0",
+        "CompetitivePong-v0": "cPong-v0"
+    }
+    msg = "Environment id {} is deprecated. Please use the short version {}."
+    if env_id in replace_names:
+        warnings.warn(msg.format(env_id, replace_names[env_id]))
+        env_id = replace_names[env_id]
+    assert env_id in [
+        "cPongTournament-v0", "cPongDouble-v0", "cPong-v0", "CartPole-v0"
+    ]
+    return env_id
 
 
 def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=5,
@@ -72,11 +83,7 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=5,
     """
     asynchronous = asynchronous and num_envs > 1
 
-    if env_id in replace_names:
-        env_id = replace_names[env_id]
-    assert env_id in [
-        "cPongTournament-v0", "cPongDouble-v0", "cPong-v0", "CartPole-v0"
-    ]
+    env_id = _verify_env_id(env_id)
 
     if env_id == "CartPole-v0":
         print("Setup easy environment CartPole-v0 for testing.")
