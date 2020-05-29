@@ -8,21 +8,20 @@ from competitive_pong.base_pong_env import PongSinglePlayerEnv, \
 def register_competitive_envs():
     try:
         register(
-            id="CompetitivePong-v0",
+            id="cPong-v0",
             entry_point=PongSinglePlayerEnv,
             kwargs=dict(
                 max_num_rounds=21
             )
         )
         register(
-            id="CompetitivePongDouble-v0",
+            id="cPongDouble-v0",
             entry_point=PongDoublePlayerEnv,
             kwargs=dict(
                 max_num_rounds=21
             )
         )
         print(
-            "Register CompetitivePong-v0 and CompetitivePongDouble-v0 "
-            "environments.")
+            "Register cPong-v0 and cPongDouble-v0 environments.")
     except gym.error.Error:
         pass
