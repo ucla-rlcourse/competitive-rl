@@ -2,8 +2,7 @@
 
 # cPong Environment
 
-
-Competitive Pong (cPong) environment is used for course assignment in IERG6130. This environment was originally developed by Belly Ho and Joe Lam, undergraduate students at CUHK, as their Final Year Project (FYP) with Prof. Zhou Bolei. Course TA Peng Zhenghao modified the environment to aggregate it into the assignment of the course.
+Competitive Pong (cPong) environment extends the classic Atari Game Pong into a competitive environment, where both side can be trainable agents. It facilitates many exploratory topics such as self-play and population-based training, as well as fun applications such as hosting Pong tournament for a group of users.  In the environment, beside the original rule-based agent to be plugged in, we also provide some pretrained agents from different RL algorithms at various difficulty levels. 
 
 ## Installation
 
@@ -58,8 +57,8 @@ python vis.py
 # ALPHA_PONG agent vs STRONG agent
 python vis.py --left ALPHA_PONG --right STRONG --num-episodes 3
 ```
+## Acknowledgement
+
+This environment was originally developed by Belly Ho and Joe Lam, undergraduate students at CUHK, as their Final Year Project (FYP) with Prof. Zhou Bolei. It won the best FYP award in the department. Peng Zhenghao further wrapped up the environment as a part of the assignment in the reinforcement learning course. 
 
 
-
------
-2019-2020 2nd term, IERG 6130: Reinforcement Learning and Beyond. Department of Information Engineering, The Chinese University of Hong Kong. Course Instructor: Professor ZHOU Bolei. Assignment author: PENG Zhenghao.
