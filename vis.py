@@ -1,7 +1,7 @@
 import argparse
 import shutil
 
-from competitive_pong import get_builtin_agent_names, make_envs, \
+from competitive_rl import get_builtin_agent_names, make_envs, \
     get_compute_action_function, evaluate_two_policies
 
 if __name__ == '__main__':
