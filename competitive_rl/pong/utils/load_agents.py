@@ -11,7 +11,7 @@ Instructor: Professor ZHOU Bolei. Assignment author: PENG Zhenghao.
 # from core.ppo_trainer import PPOTrainer, ppo_config
 # from core.utils import FrameStackTensor
 # from make_envs import make_envs
-from competitive_pong.utils.utils import FrameStackTensor
+from competitive_rl.pong.utils import FrameStackTensor
 
 # BUILTIN_AGENT_NAMES = [
 #     "RANDOM",

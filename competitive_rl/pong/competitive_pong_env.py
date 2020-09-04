@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from competitive_pong.builtin_policies import get_compute_action_function, \
+from competitive_rl.pong.builtin_policies import get_compute_action_function, \
     get_builtin_agent_names
 
 

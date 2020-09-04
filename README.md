@@ -18,9 +18,9 @@ Create the environment after registration:
 
 ```python
 import gym
-import competitive_pong
+import competitive_rl
 
-competitive_pong.register_tournament_envs()
+competitive_rl.register_competitive_envs()
 
 env_single = gym.make("cPong-v0")
 
@@ -59,6 +59,6 @@ python vis.py --left ALPHA_PONG --right STRONG --num-episodes 3
 ```
 ## Acknowledgement
 
-This environment was originally developed by Belly Ho and Joe Lam, undergraduate students at CUHK, as their Final Year Project (FYP) with Prof. Zhou Bolei. It won the best FYP award in the department. Peng Zhenghao further wrapped up the environment as a part of the assignment in the reinforcement learning course. 
+The Competitive Pong environment was originally developed by Belly Ho and Joe Lam, undergraduate students at CUHK, as their Final Year Project (FYP) with Prof. ZHOU Bolei. It won the best FYP award in the department. Peng Zhenghao further wrapped up the environment as a part of the assignment in the reinforcement learning course. 
 
 

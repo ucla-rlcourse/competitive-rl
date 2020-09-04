@@ -4,8 +4,8 @@ import os
 import numpy as np
 import torch
 
-from competitive_pong.utils.network import LightActorCritic, ActorCritic
-from competitive_pong.utils.utils import FrameStackTensor
+from competitive_rl.pong.utils import LightActorCritic, ActorCritic
+from competitive_rl.pong.utils import FrameStackTensor
 
 
 class Policy:
@@ -30,7 +30,7 @@ class Policy:
         self.model.train()
 
         if checkpoint_path:
-            assert os.path.isfile(checkpoint_path)
+            assert os.path.isfile(checkpoint_path), checkpoint_path
             state_dict = torch.load(checkpoint_path, self.device)
             self.model.load_state_dict(state_dict["model"])
         else:
