@@ -1,0 +1,11 @@
+# development tools
+.vs
+.vscode
+.idea
+__pycache__
+
+*.o
+*.out
+*.drt
+./*.log
+debug/
