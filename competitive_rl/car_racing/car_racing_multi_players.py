@@ -30,8 +30,12 @@ and turn at the same time.
 
 Created by Oleg Klimov. Licensed on the same terms as the rest of OpenAI Gym.
 """
+import datetime
 import json
 import math
+import sys
+import time
+
 import numpy as np
 
 import Box2D
@@ -42,11 +46,15 @@ from Box2D.b2 import contactListener
 
 import gym
 from gym import spaces
-from gym.envs.box2d.car_dynamics import Car
+
+
 from gym.utils import seeding, EzPickle
 
 #import pyglet
 #from pyglet import gl
+from competitive_rl.car_racing.car_dynamics import Car
+from competitive_rl.car_racing.controller import key_phrase
+from competitive_rl.car_racing.pygame_rendering import vertical_ind, horiz_ind
 
 STATE_W = 96   # less than Atari 160x192
 STATE_H = 96
@@ -71,6 +79,12 @@ BORDER_MIN_COUNT = 4
 
 ROAD_COLOR = [0.4, 0.4, 0.4]
 
+window_size = width, height = 1920,1080
+white = 255, 255, 255
+initial_camera_scale = 3
+initial_camera_offset = (0,0)
+initial_camera_angle = 0
+car_scale = 5
 
 class FrictionDetector(contactListener):
     def __init__(self, env):
@@ -127,6 +141,7 @@ class CarRacing(gym.Env, EzPickle):
             contactListener=self.contactListener_keepref
         )
         self.viewer = None
+        self.screen = None
         self.invisible_state_window = None
         self.invisible_video_window = None
         self.road = None
@@ -136,6 +151,15 @@ class CarRacing(gym.Env, EzPickle):
         self.verbose = verbose
         self.num_player = num_player
         self.track = None
+
+        self.camera_offset = initial_camera_offset
+        self.camera_scale = initial_camera_scale
+        self.camera_no_follow_scale = initial_camera_scale
+        self.car_scale = car_scale
+        self.camera_angle = initial_camera_angle
+        self.camera_follow = -1
+
+        self.object_to_draw = []
         self.fd_tile = fixtureDef(
             shape=polygonShape(vertices=[(0, 0), (1, 0), (1, -1), (0, -1)])
         )
@@ -163,7 +187,7 @@ class CarRacing(gym.Env, EzPickle):
         self.road = []
         self.car.destroy()
 
-    def _create_track(self):
+    def _create_track(self,use_local_track="", record_track_to=""):
         CHECKPOINTS = 12
 
         # Create checkpoints
@@ -277,6 +301,13 @@ class CarRacing(gym.Env, EzPickle):
         if well_glued_together > TRACK_DETAIL_STEP:
             return False
 
+        if use_local_track != "":
+            track = []
+            file = open(use_local_track, 'r',encoding='utf-8')
+            data = json.load(file)
+            for i in range(len(data)):
+                track.append((data[i][0],data[i][1],data[i][2],data[i][3]))
+            print(track)
         # Red-white border on hard turns
         border = [False] * len(track)
         for i in range(len(track)):
@@ -331,31 +362,34 @@ class CarRacing(gym.Env, EzPickle):
                     )
                 )
         self.track = track
-
-        data = json.dumps(track)
-        print(data)
+        if record_track_to != "":
+            file = open(record_track_to + "/" + datetime.datetime.fromtimestamp(time.time()).strftime(
+                f"%Y-%m-%d_%H-%M-%S_track.json"
+            ), 'w', encoding='utf-8')
+            json.dump(track, file)
         return True
 
-    def reset(self):
+    def reset(self, use_local_track="", record_track_to=""):
         self._destroy()
         self.reward = 0.0
         self.prev_reward = 0.0
         self.tile_visited_count = 0
         self.t = 0.0
         self.road_poly = []
-
-        while True:
-            success = self._create_track()
-            if success:
-                break
-            if self.verbose == 1:
-                print(
-                    "retry to generate track (normal if there are not many"
-                    "instances of this message)"
-                )
+        if use_local_track != "":
+            self._create_track(use_local_track=use_local_track, record_track_to=record_track_to)
+        else:
+            while True:
+                success = self._create_track(use_local_track=use_local_track, record_track_to=record_track_to)
+                if success:
+                    break
+                if self.verbose == 1:
+                    print(
+                        "retry to generate track (normal if there are not many"
+                        "instances of this message)"
+                    )
         for i in range(self.num_player):
             self.cars.append(Car(self.world, *self.track[0][1:4]))
-            #self.cars.append(Car(self.world, 1, 100 , 100))
 
         return self.step(None)[0]
 
@@ -535,79 +569,74 @@ class CarRacing(gym.Env, EzPickle):
         self.score_label.text = "%04i" % self.reward
         self.score_label.draw()'''
 
-    '''def render_indicators_for_pygame(self, screen, W, H):
+    def render_indicators_for_pygame(self, screen, W=width, H=height):
+        if self.camera_follow < 0:
+            return
         s = W / 40.0
         h = H / 40.0
 
-        def vertical_ind(place, val, color):
-            pygame.draw.rect(screen, color, (((place+0) * s, h + h * val, 0),
-                                             ((place+1) * s, h + h * val, 0),
-                                             ((place+1) * s, h, 0),
-                                             ((place+0) * s, h, 0)))
+        '''def vertical_ind(place, val, color):
+            pygame.draw.rect(screen, color, (place * s, h,s, h * val))'''
 
-        vertical_ind()'''
+        '''def horiz_ind(place, val, color):
+            pygame.draw.rect(screen, color, (place * s, 2 * h, s * val, 2 * h))'''
 
-    def render_road_for_pygame(self, screen,  W_W,W_H, offset=(0,0), angle=0, scale=1):
+
+        true_speed = np.sqrt(
+            np.square(self.cars[self.camera_follow].hull.linearVelocity[0])
+            + np.square(self.cars[self.camera_follow].hull.linearVelocity[1])
+        )
+        vertical_ind(screen, 5 * s, h, s, h, 0.02*true_speed, (0, 0, 255))
+        vertical_ind(screen, 7 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[0].omega, (0.0, 0, 255))  # ABS sensors
+        vertical_ind(screen, 8 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[1].omega, (0.0, 0, 255))
+        vertical_ind(screen, 9 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[2].omega, (0.2 * 255, 0, 255))
+        vertical_ind(screen, 10 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[3].omega, (0.2 * 255, 0, 1))
+        horiz_ind(screen, 20 * s, 2 * h, s, 2 * h, -10.0 * self.cars[self.camera_follow].wheels[0].joint.angle, (0, 255, 0))
+        horiz_ind(screen, 30 * s, 2 * h, s, 2 * h, -0.8 * self.cars[self.camera_follow].hull.angularVelocity, (255, 0, 0))
+
+    def render_road_for_pygame(self, screen):
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         for poly, color in self.road_poly:
             tmp = Box2D.b2Transform()
             tmp.position = (0, 0)
-            tmp.angle = -angle
+            tmp.angle = -self.camera_angle
             # trans = Box2D.b2Transform()
-            path_tmp = [(-v[0] + offset[0], -v[1] + offset[1]) for v in poly]
-            path = [scale*(tmp*v) + (W_W/2, W_H/2) for v in path_tmp]
+            path_tmp = [(-v[0] + self.camera_offset[0], -v[1] + self.camera_offset[1]) for v in poly]
+            path = [self.camera_scale*(tmp*v) + (width/2, height/2) for v in path_tmp]
+            #self.object_to_draw.append(([255 * i for i in color], path))
             pygame.draw.polygon(screen, [255 * i for i in color], path)
 
+    def camera_update(self):
+        if (self.camera_follow != -1):
+            self.camera_offset = self.cars[self.camera_follow].hull.position
+            self.camera_angle = self.cars[self.camera_follow].hull.angle
+            self.camera_scale = self.car_scale
+        else :
+            self.camera_offset = initial_camera_offset
+            self.camera_angle = initial_camera_angle
+            self.camera_scale = initial_camera_scale
+
+    def camera_manage_input(self, car_follow):
+        if car_follow != None:
+            self.camera_follow = car_follow
 
 if __name__ == "__main__":
-    #from pyglet.window import key
-    '''a = [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]]
+    
+    pygame.init()
+    env = CarRacing(num_player=2)
 
-    def key_press(k, mod):
-        global restart
-        if k == 0xff0d: restart = True
-        if k == key.LEFT:  a[0][0] = -1.0
-        if k == key.RIGHT: a[0][0] = +1.0
-        if k == key.UP:    a[0][1] = +1.0
-        if k == key.DOWN:  a[0][2] = +0.8   # set 1.0 for wheels to block to zero rotation
-        if k == key.A:  a[1][0] = -1.0
-        if k == key.D: a[1][0] = +1.0
-        if k == key.W:    a[1][1] = +1.0
-        if k == key.S:  a[1][2] = +0.8   # set 1.0 for wheels to block to zero rotation
+    env.reset(use_local_track="",record_track_to="")
+    a = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+    screen = pygame.display.set_mode(window_size, pygame.RESIZABLE)
+    while True:
+        screen.fill(white)
+        env.camera_manage_input(key_phrase(a))
+        env.camera_update()
+        env.step(a)
+        env.render_road_for_pygame(screen)
 
-    def key_release(k, mod):
-        if k == key.LEFT  and a[0][0] == -1.0: a[0][0] = 0
-        if k == key.RIGHT and a[0][0] == +1.0: a[0][0] = 0
-        if k == key.UP:    a[0][1] = 0
-        if k == key.DOWN:  a[0][2] = 0
-        if k == key.A  and a[1][0] == -1.0: a[1][0] = 0
-        if k == key.D and a[1][0] == +1.0: a[1][0] = 0
-        if k == key.W:    a[1][1] = 0
-        if k == key.S:  a[1][2] = 0'''
+        for car in env.cars:
+            car.draw_for_pygame(screen, width, height, offset=env.camera_offset, angle=env.camera_angle, scale=env.camera_scale)
 
-
-    env = CarRacing(num_player=1)
-    env.render()
-    #env.viewer.window.on_key_press = key_press
-    #env.viewer.window.on_key_release = key_release
-    record_video = False
-    if record_video:
-        from gym.wrappers.monitor import Monitor
-        env = Monitor(env, '/tmp/video-test', force=True)
-    isopen = True
-    while isopen:
-        env.reset()
-        total_reward = 0.0
-        steps = 0
-        restart = False
-        while True:
-            s, r, done, info = env.step(a)
-            total_reward += r
-            #if steps % 200 == 0 or done:
-                #print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
-                #print("step {} total_reward {:+0.2f}".format(steps, total_reward))
-            steps += 1
-            isopen = env.render()
-            if done or restart or isopen == False:
-                break
-    env.close()
+        env.render_indicators_for_pygame(screen)
+        pygame.display.update()

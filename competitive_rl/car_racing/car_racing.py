@@ -37,7 +37,7 @@ import Box2D
 from Box2D.b2 import fixtureDef
 from Box2D.b2 import polygonShape
 from Box2D.b2 import contactListener
-
+from matplotlib import pyplot as plt
 import gym
 from gym import spaces
 from gym.envs.box2d.car_dynamics import Car
@@ -554,12 +554,14 @@ if __name__ == "__main__":
         restart = False
         while True:
             s, r, done, info = env.step(a)
+            plt.imshow(s)
+            plt.show()
             total_reward += r
             if steps % 200 == 0 or done:
                 print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
                 print("step {} total_reward {:+0.2f}".format(steps, total_reward))
             steps += 1
             isopen = env.render()
-            if done or restart or isopen == False:
-                break
+            #if done or restart or isopen == False:
+                #break
     env.close()

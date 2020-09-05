@@ -6,15 +6,12 @@ This simulation is a bit more detailed, with wheels rotation.
 
 Created by Oleg Klimov. Licensed on the same terms as the rest of OpenAI Gym.
 """
-import copy
 
 import numpy as np
 import math
 import Box2D
 import pygame
 from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revoluteJointDef, contactListener, shape)
-
-from gym.envs.classic_control.rendering import Transform
 
 SIZE = 0.02
 ENGINE_POWER = 100000000*SIZE*SIZE
@@ -245,9 +242,9 @@ class Car:
 
 
     def draw_for_pygame(self, screen, W_W,W_H, draw_particles=True,  offset=(0,0), angle=0, scale=1):
-        #if draw_particles:
-            #for p in self.particles:
-                #viewer.draw_polyline(p.poly, color=p.color, linewidth=5)
+        '''if draw_particles:
+            for p in self.particles:
+                viewer.draw_polyline(p.poly, color=p.color, linewidth=5)'''
         for obj in self.drawlist:
             for f in obj.fixtures:
                 trans = f.body.transform
@@ -255,8 +252,10 @@ class Car:
                 tmp.position = (0, 0)
                 tmp.angle = -angle
                 #trans = Box2D.b2Transform()
+
                 path = [-scale*(tmp*((trans*v)-offset)) + (W_W/2, W_H/2) for v in f.shape.vertices]
                 pygame.draw.polygon(screen, [255 * i for i in obj.color], path)
+                #object_to_draw.append(([255 * i for i in obj.color], path))
                 if "phase" not in obj.__dict__: continue
                 a1 = obj.phase
                 a2 = obj.phase + 1.2  # radians
@@ -273,6 +272,7 @@ class Car:
                     ]
                 white_poly_path = [-scale*(tmp*((trans*v)-offset)) + (W_W/2, W_H/2) for v in white_poly]
                 pygame.draw.polygon(screen, WHEEL_WHITE, white_poly_path)
+                #object_to_draw.append((WHEEL_WHITE, white_poly_path))
 
     def _create_particle(self, point1, point2, grass):
         class Particle:
