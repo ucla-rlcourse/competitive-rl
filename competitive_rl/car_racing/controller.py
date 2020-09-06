@@ -8,7 +8,9 @@ def key_phrase(a):
         if event.type == pygame.QUIT:
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_0:
+            if event.key == pygame.K_z:
+                return -2
+            elif event.key == pygame.K_0:
                 return -1
             elif event.key == pygame.K_1:
                 return 0
