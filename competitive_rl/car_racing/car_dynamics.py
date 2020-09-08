@@ -13,6 +13,8 @@ import Box2D
 import pygame
 from Box2D.b2 import (edgeShape, circleShape, fixtureDef, polygonShape, revoluteJointDef, contactListener, shape)
 
+from competitive_rl.car_racing.color_mananger import get_a_color
+
 SIZE = 0.02
 ENGINE_POWER = 100000000*SIZE*SIZE
 WHEEL_MOMENT_OF_INERTIA = 4000*SIZE*SIZE
@@ -51,7 +53,7 @@ MUD_COLOR = (0.4, 0.4, 0.0)
 
 
 class Car:
-    def __init__(self, world, init_angle, init_x, init_y):
+    def __init__(self, world, init_angle, init_x, init_y, car_number):
         self.world = world
         self.hull = self.world.CreateDynamicBody(
             position=(init_x, init_y),
@@ -63,7 +65,8 @@ class Car:
                 fixtureDef(shape=polygonShape(vertices=[(x*SIZE, y*SIZE) for x, y in HULL_POLY4]), density=1.0)
                 ]
             )
-        self.hull.color = (0.8, 0.0, 0.0)
+        #self.hull.color = (0.8, 0.0, 0.0)
+        self.hull.color = get_a_color(car_number)
         self.wheels = []
         self.fuel_spent = 0.0
         WHEEL_POLY = [
@@ -82,6 +85,7 @@ class Car:
                     maskBits=0x001,
                     restitution=0.0)
                     )
+            w.car_number = car_number
             w.wheel_rad = front_k*WHEEL_R*SIZE
             w.color = WHEEL_COLOR
             w.gas = 0.0
