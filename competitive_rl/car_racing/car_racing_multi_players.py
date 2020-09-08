@@ -443,7 +443,7 @@ class CarRacing(gym.Env, EzPickle):
                     step_rewards[i] = -100
 
         #return self.state, step_reward, done, {}
-        return self.get_all_cars_observations(),step_rewards, self.done, {}
+        #return self.get_all_cars_observations(),step_rewards, self.done, {}
         return step_rewards, self.done, {}
 
     '''def render(self, mode='human'):
