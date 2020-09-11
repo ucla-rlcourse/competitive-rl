@@ -678,9 +678,9 @@ class CarRacing(gym.Env, EzPickle):
             obs_arr.append(pygame.surfarray.array3d(obs_surface))
         self.state = obs_arr
         
-        if (self.rewards[0] + 1) > 200:
-            plt.imshow(self.state[0])
-            plt.show()
+        # if (self.rewards[0] + 1) > 200:
+        #     plt.imshow(self.state[0])
+        #     plt.show()
         
         # Return camera to normal position
         self.camera_follow = original_follow
