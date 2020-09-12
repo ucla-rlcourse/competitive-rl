@@ -65,8 +65,8 @@ class Car:
                 fixtureDef(shape=polygonShape(vertices=[(x*SIZE, y*SIZE) for x, y in HULL_POLY4]), density=1.0)
                 ]
             )
-        #self.hull.color = (0.8, 0.0, 0.0)
-        self.hull.color = get_a_color(car_number)
+        self.hull.color = (0.8, 0.0, 0.0)
+        #self.hull.color = get_a_color(car_number)
         self.hull.car_number = car_number
         self.hull.userData = self.hull
         self.wheels = []
@@ -247,7 +247,7 @@ class Car:
                 viewer.draw_polygon([trans*v for v in white_poly], color=WHEEL_WHITE)
 
 
-    def draw_for_pygame(self, screen, W_W,W_H, draw_particles=True,  offset=(0,0), angle=0, scale=1):
+    def draw_for_pygame(self, screen, W_W,W_H, draw_particles=True,  offset=(0,0), angle=0, scale=1, color=(0.8 * 255, 0 ,0)):
         '''if draw_particles:
             for p in self.particles:
                 viewer.draw_polyline(p.poly, color=p.color, linewidth=5)'''
@@ -260,7 +260,10 @@ class Car:
                 #trans = Box2D.b2Transform()
 
                 path = [-scale*(tmp*((trans*v)-offset)) + (W_W/2, W_H/2) for v in f.shape.vertices]
-                pygame.draw.polygon(screen, [255 * i for i in obj.color], path)
+                if "phase" not in obj.__dict__:
+                    pygame.draw.polygon(screen, color, path)
+                else:
+                    pygame.draw.polygon(screen, [255 * i for i in obj.color], path)
                 #object_to_draw.append(([255 * i for i in obj.color], path))
                 if "phase" not in obj.__dict__: continue
                 a1 = obj.phase

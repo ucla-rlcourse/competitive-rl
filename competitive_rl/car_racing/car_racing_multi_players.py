@@ -121,14 +121,14 @@ class FrictionDetector(contactListener):
             obj = u1
         if not tile:
             return
-
-        tile.color[0] = ROAD_COLOR[0]
-        tile.color[1] = ROAD_COLOR[1]
-        tile.color[2] = ROAD_COLOR[2]
-        if not obj or "tiles" not in obj.__dict__:
-            return
         if "car_number" in obj.__dict__:
             car_number = obj.car_number
+        tile.color[car_number][0] = ROAD_COLOR[0]
+        tile.color[car_number][1] = ROAD_COLOR[1]
+        tile.color[car_number][2] = ROAD_COLOR[2]
+        if not obj or "tiles" not in obj.__dict__:
+            return
+
         if begin:
             obj.tiles.add(tile)
             if not tile.road_visited[car_number]:
@@ -353,7 +353,9 @@ class CarRacing(gym.Env, EzPickle):
             t = self.world.CreateStaticBody(fixtures=self.fd_tile)
             t.userData = t
             c = 0.01*(i%3)
-            t.color = [ROAD_COLOR[0] + c, ROAD_COLOR[1] + c, ROAD_COLOR[2] + c]
+            t.color = []
+            for i in range(self.num_player):
+                t.color.append([ROAD_COLOR[0] + c, ROAD_COLOR[1] + c, ROAD_COLOR[2] + c])
             t.road_visited = [False] * self.num_player
             t.road_friction = 1.0
             t.fixtures[0].sensor = True
@@ -508,7 +510,7 @@ class CarRacing(gym.Env, EzPickle):
             path_tmp = [(-v[0] + self.camera_offset[0], -v[1] + self.camera_offset[1]) for v in poly]
             path = [self.camera_scale*(tmp*v) + (width/2, height/2) for v in path_tmp]
             #self.object_to_draw.append(([255 * i for i in color], path))
-            pygame.draw.polygon(screen, [255 * i for i in color], path)
+            pygame.draw.polygon(screen, [255 * i for i in color[env.camera_follow]], path)
 
     def camera_update(self, mode="human"):
         if (self.camera_follow != -1):
@@ -547,10 +549,17 @@ class CarRacing(gym.Env, EzPickle):
 
             env.render_road_for_pygame(surface)
 
-            for car in env.cars:
+            '''for car in env.cars:
                 car.draw_for_pygame(surface, width, height, offset=env.camera_offset, angle=env.camera_angle,
-                                    scale=env.camera_scale)
-
+                                    scale=env.camera_scale)'''
+            for i in range(len(env.cars)):
+                if env.camera_follow == i:
+                    env.cars[i].draw_for_pygame(surface, width, height, offset=env.camera_offset, angle=env.camera_angle,
+                                        scale=env.camera_scale)
+                else:
+                    env.cars[i].draw_for_pygame(surface, width, height, offset=env.camera_offset,
+                                                angle=env.camera_angle,
+                                                scale=env.camera_scale, color = (0,0,0))
             env.render_indicators_for_pygame(surface)
             return surface
         if mode == "state_pixel":
