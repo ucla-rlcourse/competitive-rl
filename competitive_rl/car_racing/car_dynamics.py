@@ -67,6 +67,8 @@ class Car:
             )
         #self.hull.color = (0.8, 0.0, 0.0)
         self.hull.color = get_a_color(car_number)
+        self.hull.car_number = car_number
+        self.hull.userData = self.hull
         self.wheels = []
         self.fuel_spent = 0.0
         WHEEL_POLY = [

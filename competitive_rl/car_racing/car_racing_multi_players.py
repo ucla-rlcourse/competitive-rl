@@ -81,10 +81,11 @@ ROAD_COLOR = [0.4, 0.4, 0.4]
 
 window_size = width, height = 1000,800
 white = 255, 255, 255
-initial_camera_scale = 3
+initial_camera_scale = 1
 initial_camera_offset = (0,0)
 initial_camera_angle = 0
-car_scale = 5
+car_scale = 15
+num_player = 2
 
 class FrictionDetector(contactListener):
     def __init__(self, env):
@@ -93,6 +94,14 @@ class FrictionDetector(contactListener):
 
     def BeginContact(self, contact):
         self._contact(contact, True)
+        u1 = contact.fixtureA.body.userData
+        u2 = contact.fixtureB.body.userData
+        if u1 and u2:
+            if u1 and "car_number" in u1.__dict__ and u2 and "car_number" in u2.__dict__:
+                print(f"{u1.car_number} collides with {u2.car_number}")
+                self.env.rewards[u1.car_number] -= 1000 / FPS
+                self.env.rewards[u2.car_number] -= 1000 / FPS
+                return
 
     def EndContact(self, contact):
         self._contact(contact, False)
@@ -102,6 +111,7 @@ class FrictionDetector(contactListener):
         obj = None
         u1 = contact.fixtureA.body.userData
         u2 = contact.fixtureB.body.userData
+
         car_number = -1
         if u1 and "road_friction" in u1.__dict__:
             tile = u1
@@ -155,6 +165,7 @@ class CarRacing(gym.Env, EzPickle):
         self.num_player = num_player
         self.track = None
         self.done = []
+        self.state = []
 
         self.camera_offset = initial_camera_offset
         self.camera_scale = initial_camera_scale
@@ -443,197 +454,80 @@ class CarRacing(gym.Env, EzPickle):
                     step_rewards[i] = -100
 
         #return self.state, step_reward, done, {}
-        #return self.get_all_cars_observations(),step_rewards, self.done, {}
-        return step_rewards, self.done, {}
-
-    '''def render(self, mode='human'):
-        assert mode in ['human', 'state_pixels', 'rgb_array']
-        if self.viewer is None:
-            from gym.envs.classic_control import rendering
-            self.viewer = rendering.Viewer(WINDOW_W, WINDOW_H)
-            self.score_label = pyglet.text.Label(
-                '0000',
-                font_size=36,
-                x=20,
-                y=WINDOW_H * 2.5 / 40.00,
-                anchor_x='left',
-                anchor_y='center',
-                color=(255, 255, 255, 255)
-            )
-            self.transform = rendering.Transform()
-
-        if "t" not in self.__dict__:
-            return  # reset() not called yet
-
-        # Animate zoom first second:
-        #zoom = 0.1 * SCALE * max(1 - self.t, 0) + ZOOM * SCALE * min(self.t, 1)
-        zoom = 8
-        scroll_x = self.cars[0].hull.position[0]
-        scroll_y = self.cars[0].hull.position[1]
-        angle = -self.cars[0].hull.angle
-        vel = self.cars[0].hull.linearVelocity
-        #if np.linalg.norm(vel) > 0.5:
-            #angle = math.atan2(vel[0], vel[1])
-        self.transform.set_scale(zoom, zoom)
-        self.transform.set_translation(
-            WINDOW_W/2
-            - (scroll_x * zoom * math.cos(angle) - scroll_y * zoom * math.sin(angle)),
-            WINDOW_H/2
-            - (scroll_x * zoom * math.sin(angle) + scroll_y * zoom * math.cos(angle))
-        )
-        self.transform.set_rotation(angle)
-
-        for car in self.cars:
-            car.draw(self.viewer, mode != "state_pixels")
-
-        arr = None
-        win = self.viewer.window
-        win.switch_to()
-        win.dispatch_events()
-
-        win.clear()
-        t = self.transform
-        if mode == 'rgb_array':
-            VP_W = VIDEO_W
-            VP_H = VIDEO_H
-        elif mode == 'state_pixels':
-            VP_W = STATE_W
-            VP_H = STATE_H
-        else:
-            pixel_scale = 1
-            if hasattr(win.context, '_nscontext'):
-                pixel_scale = win.context._nscontext.view().backingScaleFactor()  # pylint: disable=protected-access
-            VP_W = int(pixel_scale * WINDOW_W)
-            VP_H = int(pixel_scale * WINDOW_H)
-
-        #gl.glViewport(0, 0, VP_W, VP_H)
-        t.enable()
-        self.render_road()
-        for geom in self.viewer.onetime_geoms:
-            geom.render()
-        self.viewer.onetime_geoms = []
-        t.disable()
-        #self.render_indicators(WINDOW_W, WINDOW_H)
-
-        if mode == 'human':
-            win.flip()
-            return self.viewer.isopen
-
-        #image_data = pyglet.image.get_buffer_manager().get_color_buffer().get_image_data()
-        #arr = np.fromstring(image_data.get_data(), dtype=np.uint8, sep='')
-        #arr = arr.reshape(VP_H, VP_W, 4)
-        #arr = arr[::-1, :, 0:3]
-
-        return arr'''
+        return self.get_all_cars_observations(), step_rewards, self.done, {}
+        return self.state, step_rewards, self.done, {}
 
     def close(self):
         if self.viewer is not None:
             self.viewer.close()
             self.viewer = None
 
-    '''def render_road(self):
-        gl.glBegin(gl.GL_QUADS)
-        gl.glColor4f(0.4, 0.8, 0.4, 1.0)
-        gl.glVertex3f(-PLAYFIELD, +PLAYFIELD, 0)
-        gl.glVertex3f(+PLAYFIELD, +PLAYFIELD, 0)
-        gl.glVertex3f(+PLAYFIELD, -PLAYFIELD, 0)
-        gl.glVertex3f(-PLAYFIELD, -PLAYFIELD, 0)
-        gl.glColor4f(0.4, 0.9, 0.4, 1.0)
-        k = PLAYFIELD/20.0
-        for x in range(-20, 20, 2):
-            for y in range(-20, 20, 2):
-                gl.glVertex3f(k * x + k, k * y + 0, 0)
-                gl.glVertex3f(k * x + 0, k * y + 0, 0)
-                gl.glVertex3f(k * x + 0, k * y + k, 0)
-                gl.glVertex3f(k * x + k, k * y + k, 0)
-        for poly, color in self.road_poly:
-            gl.glColor4f(color[0], color[1], color[2], 1)
-            for p in poly:
-                gl.glVertex3f(p[0], p[1], 1)
-        gl.glEnd()'''
 
-    '''def render_indicators(self, W, H):
-        gl.glBegin(gl.GL_QUADS)
-        s = W / 40.0
-        h = H / 40.0
-        gl.glColor4f(0, 0, 0, 1)
-        gl.glVertex3f(W, 0, 0)
-        gl.glVertex3f(W, 5 * h, 0)
-        gl.glVertex3f(0, 5 * h, 0)
-        gl.glVertex3f(0, 0, 0)
 
-        def vertical_ind(place, val, color):
-            gl.glColor4f(color[0], color[1], color[2], 1)
-            gl.glVertex3f((place+0) * s, h + h * val, 0)
-            gl.glVertex3f((place+1) * s, h + h * val, 0)
-            gl.glVertex3f((place+1) * s, h, 0)
-            gl.glVertex3f((place+0) * s, h, 0)
-
-        def horiz_ind(place, val, color):
-            gl.glColor4f(color[0], color[1], color[2], 1)
-            gl.glVertex3f((place + 0) * s, 4 * h, 0)
-            gl.glVertex3f((place + val) * s, 4 * h, 0)
-            gl.glVertex3f((place + val) * s, 2 * h, 0)
-            gl.glVertex3f((place + 0) * s, 2 * h, 0)
-        true_speed = np.sqrt(
-            np.square(self.car.hull.linearVelocity[0])
-            + np.square(self.car.hull.linearVelocity[1])
-        )
-        vertical_ind(5, 0.02*true_speed, (1, 1, 1))
-        vertical_ind(7, 0.01*self.car.wheels[0].omega, (0.0, 0, 1))  # ABS sensors
-        vertical_ind(8, 0.01*self.car.wheels[1].omega, (0.0, 0, 1))
-        vertical_ind(9, 0.01*self.car.wheels[2].omega, (0.2, 0, 1))
-        vertical_ind(10, 0.01*self.car.wheels[3].omega, (0.2, 0, 1))
-        horiz_ind(20, -10.0 * self.car.wheels[0].joint.angle, (0, 1, 0))
-        horiz_ind(30, -0.8 * self.car.hull.angularVelocity, (1, 0, 0))
-        gl.glEnd()
-        self.score_label.text = "%04i" % self.reward
-        self.score_label.draw()'''
-
-    def render_indicators_for_pygame(self, screen, W=width, H=height):
+    def render_indicators_for_pygame(self, screen, width=width, height=height,scale=30):
         if self.camera_follow < 0:
             return
-        s = W / 40.0
-        h = H / 40.0
-
-        '''def vertical_ind(place, val, color):
-            pygame.draw.rect(screen, color, (place * s, h,s, h * val))'''
-
-        '''def horiz_ind(place, val, color):
-            pygame.draw.rect(screen, color, (place * s, 2 * h, s * val, 2 * h))'''
-
+        s = width / 40.0
+        h = height / 40.0
 
         true_speed = np.sqrt(
             np.square(self.cars[self.camera_follow].hull.linearVelocity[0])
             + np.square(self.cars[self.camera_follow].hull.linearVelocity[1])
         )
-        vertical_ind(screen, 5 * s, h, s, h, 0.02*true_speed, (0, 0, 255))
-        vertical_ind(screen, 7 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[0].omega, (0.0, 0, 255))  # ABS sensors
-        vertical_ind(screen, 8 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[1].omega, (0.0, 0, 255))
-        vertical_ind(screen, 9 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[2].omega, (0.2 * 255, 0, 255))
-        vertical_ind(screen, 10 * s, h, s, h, 0.01 * self.cars[self.camera_follow].wheels[3].omega, (0.2 * 255, 0, 1))
-        horiz_ind(screen, 20 * s, 2 * h, s, 2 * h, -10.0 * self.cars[self.camera_follow].wheels[0].joint.angle, (0, 255, 0))
-        horiz_ind(screen, 30 * s, 2 * h, s, 2 * h, -0.8 * self.cars[self.camera_follow].hull.angularVelocity, (255, 0, 0))
-        draw_text(screen, str(self.rewards[self.camera_follow]), 10, 10)
+        vertical_ind(screen, 0, height - 4 * h, width, 4 * h, 1000, (0,0,0))
+        vertical_ind(screen, 5 * s, height - h, s, h, -0.02*true_speed, (0, 0, 255))
+        vertical_ind(screen, 7 * s, height - h, s, h, -0.01 * self.cars[self.camera_follow].wheels[0].omega, (0.0, 0, 255))  # ABS sensors
+        vertical_ind(screen, 8 * s, height - h, s, h, -0.01 * self.cars[self.camera_follow].wheels[1].omega, (0.0, 0, 255))
+        vertical_ind(screen, 9 * s, height - h, s, h, -0.01 * self.cars[self.camera_follow].wheels[2].omega, (0.2 * 255, 0, 255))
+        vertical_ind(screen, 10 * s, height - h, s, h, -0.01 * self.cars[self.camera_follow].wheels[3].omega, (0.2 * 255, 0, 255))
+        horiz_ind(screen, 20 * s, height - 2 *  h, s, 2 * h, 10.0 * self.cars[self.camera_follow].wheels[0].joint.angle, (0, 255, 0))
+        horiz_ind(screen, 30 * s, height - 2 *  h, s, 2 * h, 0.8 * self.cars[self.camera_follow].hull.angularVelocity, (255, 0, 0))
+        draw_text(screen, str("%04i" % self.rewards[self.camera_follow]), width/100, height - height/20,scale)
 
-
-    def render_road_for_pygame(self, screen):
+    def render_road_for_pygame(self, screen, width=width, height=height):
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
+        tmp = Box2D.b2Transform()
+        tmp.position = (0, 0)
+        tmp.angle = -self.camera_angle
+        k = PLAYFIELD / 20.0
+        square_to_draw = []
+        for x in range(-20, 20, 2):
+            for y in range(-20, 20, 2):
+                square_to_draw.append([(k * x + k, k * y + 0),
+                                       (k * x + 0, k * y + 0),
+                                       (k * x + 0, k * y + k),
+                                       (k * x + k, k * y + k)])
+
+        for square in square_to_draw:
+            path_tmp = [(-v[0] + self.camera_offset[0], -v[1] + self.camera_offset[1]) for v in square]
+            path = [self.camera_scale * (tmp * v) + (width / 2, height / 2) for v in path_tmp]
+            pygame.draw.polygon(screen, (0.4 * 255, 0.9 * 255, 0.4 * 255), path)
         for poly, color in self.road_poly:
-            tmp = Box2D.b2Transform()
-            tmp.position = (0, 0)
-            tmp.angle = -self.camera_angle
+
             # trans = Box2D.b2Transform()
             path_tmp = [(-v[0] + self.camera_offset[0], -v[1] + self.camera_offset[1]) for v in poly]
             path = [self.camera_scale*(tmp*v) + (width/2, height/2) for v in path_tmp]
             #self.object_to_draw.append(([255 * i for i in color], path))
             pygame.draw.polygon(screen, [255 * i for i in color], path)
 
-    def camera_update(self):
+    def camera_update(self, mode="human"):
         if (self.camera_follow != -1):
-            self.camera_offset = self.cars[self.camera_follow].hull.position
-            self.camera_angle = self.cars[self.camera_follow].hull.angle
-            self.camera_scale = self.car_scale
+            angle = self.cars[self.camera_follow].hull.angle
+            vel = self.cars[self.camera_follow].hull.linearVelocity
+            if np.linalg.norm(vel) > 0.5:
+                angle = math.atan2(-vel[0], +vel[1])
+
+            tmp = Box2D.b2Transform()
+            tmp.position = (0, 0)
+            tmp.angle = angle
+            if mode == "state_pixel":
+                self.camera_offset = self.cars[self.camera_follow].hull.position + tmp*(0,16)
+                self.camera_angle = angle
+                self.camera_scale = self.car_scale / (100/ math.sqrt(96))
+            elif mode == "human":
+                self.camera_offset = self.cars[self.camera_follow].hull.position + tmp * (0, height / 54)
+                self.camera_angle = angle
+                self.camera_scale = self.car_scale
         else :
             self.camera_offset = initial_camera_offset
             self.camera_angle = initial_camera_angle
@@ -646,19 +540,30 @@ class CarRacing(gym.Env, EzPickle):
             if input_number == -2:
                 self.show_all_car_obs = True
 
+    def get_rendered_screen(self, surface=None, mode = "human"):
+        if mode == "human":
+            if surface == None:
+                surface = pygame.Surface(window_size)
 
+            env.render_road_for_pygame(surface)
 
-    def current_screen(self, surface=None):
-        if surface == None:
-            surface = pygame.Surface(window_size)
+            for car in env.cars:
+                car.draw_for_pygame(surface, width, height, offset=env.camera_offset, angle=env.camera_angle,
+                                    scale=env.camera_scale)
 
-        env.render_road_for_pygame(surface)
+            env.render_indicators_for_pygame(surface)
+            return surface
+        if mode == "state_pixel":
+            if surface == None:
+                surface = pygame.Surface((STATE_W,STATE_H))
 
-        for car in env.cars:
-            car.draw_for_pygame(surface, width, height, offset=env.camera_offset, angle=env.camera_angle,
-                                scale=env.camera_scale)
+            env.render_road_for_pygame(surface, width=STATE_W, height=STATE_H)
 
-        env.render_indicators_for_pygame(surface)
+            for car in env.cars:
+                car.draw_for_pygame(surface, STATE_W, STATE_H, offset=env.camera_offset, angle=env.camera_angle,
+                                    scale=env.camera_scale)
+
+            env.render_indicators_for_pygame(surface, width=STATE_W, height=STATE_H,scale=5)
         return surface
 
     def get_all_cars_observations(self):
@@ -666,9 +571,9 @@ class CarRacing(gym.Env, EzPickle):
         obs = []
         for i in range(self.num_player):
             self.camera_follow = i
-            self.camera_update()
-            screen = self.current_screen()
-            arr = output_this_car_obsearvation(screen)
+            self.camera_update("state_pixel")
+            surface = self.get_rendered_screen(mode="state_pixel")
+            arr = output_this_car_obsearvation(surface)
             obs.append(arr)
         self.camera_follow = original_follow
         self.camera_update()
@@ -690,20 +595,22 @@ if __name__ == "__main__":
 
     pygame.init()
     pygame.font.init()
-    env = CarRacing(num_player=2)
+    env = CarRacing(num_player=num_player)
 
     env.reset(use_local_track="",record_track_to="")
-    a = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+    # example: env.reset(use_local_track="./track/test.json",record_track_to="")
+    # example: env.reset(use_local_track="",record_track_to="./track")
+    a = [[0.0, 0.0, 0.0] for _ in range(num_player)]
     screen = pygame.display.set_mode(window_size, pygame.RESIZABLE)
     while True:
         screen.fill(white)
         env.manage_input(key_phrase(a))
         env.camera_update()
-        env.step(a)
+        observation, reward, done, info = env.step(a)
         if env.show_all_car_obs == True:
-            obs = env.get_all_cars_observations()
-            show_all_obs(obs)
+            show_all_obs(observation)
             env.show_all_car_obs = False
 
-        screen = env.current_screen(screen)
+
+        screen = env.get_rendered_screen(screen)
         pygame.display.update()

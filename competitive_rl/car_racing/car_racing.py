@@ -409,8 +409,10 @@ class CarRacing(gym.Env, EzPickle):
             angle = math.atan2(vel[0], vel[1])
         self.transform.set_scale(zoom, zoom)
         self.transform.set_translation(
-            WINDOW_W/2 - (scroll_x * zoom * math.cos(angle) - scroll_y * zoom * math.sin(angle)),
-            WINDOW_H/4 - (scroll_x * zoom * math.sin(angle) + scroll_y * zoom * math.cos(angle))
+            WINDOW_W/2
+            - (scroll_x * zoom * math.cos(angle) - scroll_y * zoom * math.sin(angle)),
+            WINDOW_H/4
+            - (scroll_x * zoom * math.sin(angle) + scroll_y * zoom * math.cos(angle))
         )
         self.transform.set_rotation(angle)
 
@@ -554,8 +556,8 @@ if __name__ == "__main__":
         restart = False
         while True:
             s, r, done, info = env.step(a)
-            plt.imshow(s)
-            plt.show()
+            #plt.imshow(s)
+            #plt.show()
             total_reward += r
             if steps % 200 == 0 or done:
                 print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
