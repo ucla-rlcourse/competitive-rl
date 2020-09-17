@@ -166,6 +166,9 @@ class CarRacing(gym.Env, EzPickle):
         self.track = None
         self.done = []
         self.state = []
+        self.state_surface = []
+        for i in range(self.num_player):
+            self.state_surface.append(pygame.Surface((STATE_W,STATE_H)))
 
         self.camera_offset = initial_camera_offset
         self.camera_scale = initial_camera_scale
@@ -490,21 +493,21 @@ class CarRacing(gym.Env, EzPickle):
         tmp.position = (0, 0)
         tmp.angle = -self.camera_angle
         k = PLAYFIELD / 20.0
-        square_to_draw = []
-        for x in range(-20, 20, 2):
-            for y in range(-20, 20, 2):
-                square_to_draw.append([(k * x + k, k * y + 0),
-                                       (k * x + 0, k * y + 0),
-                                       (k * x + 0, k * y + k),
-                                       (k * x + k, k * y + k)])
+        # square_to_draw = []
+        # for x in range(-20, 20, 2):
+        #     for y in range(-20, 20, 2):
+        #         square_to_draw.append([(k * x + k, k * y + 0),
+        #                                (k * x + 0, k * y + 0),
+        #                                (k * x + 0, k * y + k),
+        #                                (k * x + k, k * y + k)])
 
-        for square in square_to_draw:
-            path_tmp = [(-v[0] + self.camera_offset[0], -v[1] + self.camera_offset[1]) for v in square]
-            path = [self.camera_scale * (tmp * v) + (width / 2, height / 2) for v in path_tmp]
-            pygame.draw.polygon(screen, (0.4 * 255, 0.9 * 255, 0.4 * 255), path)
+        # for square in square_to_draw:
+        #     path_tmp = [(-v[0] + self.camera_offset[0], -v[1] + self.camera_offset[1]) for v in square]
+        #     path = [self.camera_scale * (tmp * v) + (width / 2, height / 2) for v in path_tmp]
+        #     pygame.draw.polygon(screen, (0.4 * 255, 0.9 * 255, 0.4 * 255), path)
         for poly, color in self.road_poly:
 
-            # trans = Box2D.b2Transform()
+            # trans = Box2D.b2Transform()S
             path_tmp = [(-v[0] + self.camera_offset[0], -v[1] + self.camera_offset[1]) for v in poly]
             path = [self.camera_scale*(tmp*v) + (width/2, height/2) for v in path_tmp]
             #self.object_to_draw.append(([255 * i for i in color], path))
@@ -540,7 +543,7 @@ class CarRacing(gym.Env, EzPickle):
             if input_number == -2:
                 self.show_all_car_obs = True
 
-    def get_rendered_screen(self, surface=None, mode = "human"):
+    def get_rendered_screen(self, surface=None, mode = "human", player_num=-1):
         if mode == "human":
             if surface == None:
                 surface = pygame.Surface(window_size)
@@ -554,17 +557,14 @@ class CarRacing(gym.Env, EzPickle):
             env.render_indicators_for_pygame(surface)
             return surface
         if mode == "state_pixel":
-            if surface == None:
-                surface = pygame.Surface((STATE_W,STATE_H))
-
-            env.render_road_for_pygame(surface, width=STATE_W, height=STATE_H)
+            env.render_road_for_pygame(self.state_surface[player_num], width=STATE_W, height=STATE_H)
 
             for car in env.cars:
-                car.draw_for_pygame(surface, STATE_W, STATE_H, offset=env.camera_offset, angle=env.camera_angle,
+                car.draw_for_pygame(self.state_surface[player_num], STATE_W, STATE_H, offset=env.camera_offset, angle=env.camera_angle,
                                     scale=env.camera_scale)
 
-            env.render_indicators_for_pygame(surface, width=STATE_W, height=STATE_H,scale=5)
-        return surface
+            env.render_indicators_for_pygame(self.state_surface[player_num], width=STATE_W, height=STATE_H,scale=5)
+        return self.state_surface[player_num]
 
     def get_all_cars_observations(self):
         original_follow =self.camera_follow
@@ -572,19 +572,11 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             self.camera_follow = i
             self.camera_update("state_pixel")
-            surface = self.get_rendered_screen(mode="state_pixel")
-            arr = output_this_car_obsearvation(surface)
-            obs.append(arr)
+            surface = self.get_rendered_screen(mode="state_pixel", player_num = i)
+            obs.append(pygame.surfarray.array3d(surface)[::-1, :, :])
         self.camera_follow = original_follow
         self.camera_update()
         return obs
-
-
-
-def output_this_car_obsearvation(screen):
-    image_data = pygame.surfarray.array3d(screen)
-    arr = image_data
-    return arr
 
 def show_all_obs(obs):
     for ob in obs:
@@ -602,6 +594,7 @@ if __name__ == "__main__":
     # example: env.reset(use_local_track="",record_track_to="./track")
     a = [[0.0, 0.0, 0.0] for _ in range(num_player)]
     screen = pygame.display.set_mode(window_size, pygame.RESIZABLE)
+    screen.set_alpha(None)
     while True:
         screen.fill(white)
         env.manage_input(key_phrase(a))
