@@ -16,5 +16,8 @@ def draw_text(screen, text, x, y, scale=30, color=(255,255,255)):
     textsurface = myfont.render(text, False, color)
     screen.blit(textsurface, (x, y))
 
+def draw_dot(screen, color, center, radius):
+    pygame.draw.circle(screen,color,center,radius)
+
 
 

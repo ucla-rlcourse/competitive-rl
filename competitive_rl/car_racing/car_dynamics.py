@@ -65,12 +65,17 @@ class Car:
                 fixtureDef(shape=polygonShape(vertices=[(x*SIZE, y*SIZE) for x, y in HULL_POLY4]), density=1.0)
                 ]
             )
-        #self.hull.color = (0.8, 0.0, 0.0)
-        self.hull.color = get_a_color(car_number)
+        self.hull.color = (0.8, 0.0, 0.0)
+        #self.hull.color = get_a_color(car_number)
         self.hull.car_number = car_number
         self.hull.userData = self.hull
         self.wheels = []
         self.fuel_spent = 0.0
+
+        self.image = pygame.image.load("./images/car.png")
+
+        self.ob_image = pygame.transform.scale(self.image, (3, 5))
+
         WHEEL_POLY = [
             (-WHEEL_W, +WHEEL_R), (+WHEEL_W, +WHEEL_R),
             (+WHEEL_W, -WHEEL_R), (-WHEEL_W, -WHEEL_R)
@@ -247,7 +252,39 @@ class Car:
                 viewer.draw_polygon([trans*v for v in white_poly], color=WHEEL_WHITE)
 
 
-    def draw_for_pygame(self, screen, W_W,W_H, draw_particles=True,  offset=(0,0), angle=0, scale=1):
+
+    def draw_for_pygame(self, screen, W_W,W_H, draw_particles=True,  offset=(0,0), angle=0, scale=1, color=(0.8 * 255, 0 ,0),mode="real"):
+
+        if mode == "image":
+            tmp = Box2D.b2Transform()
+            tmp.position = (0, 0)
+            tmp.angle = -angle
+            tmp1 = Box2D.b2Transform()
+            tmp1.position = (0, 0)
+            tmp1.angle = angle
+            image = self.image
+            image = pygame.transform.rotate(image, 57.295779513 * (-self.hull.angle+angle))
+            pos = self.hull.position
+            center = image.get_rect().center
+            draw_pos = scale * (tmp * (offset - pos))
+            screen.blit(image, (draw_pos[0] - center[0] + W_W / 2 , draw_pos[1] + W_H / 2 - center[1]))
+            return
+
+        if mode == "ob_image":
+            tmp = Box2D.b2Transform()
+            tmp.position = (0, 0)
+            tmp.angle = -angle
+            tmp1 = Box2D.b2Transform()
+            tmp1.position = (0, 0)
+            tmp1.angle = angle
+            image = self.ob_image
+            image = pygame.transform.rotate(image, 57.295779513 * (-self.hull.angle+angle))
+            pos = self.hull.position
+            center = image.get_rect().center
+            draw_pos = scale * (tmp * (offset - pos))
+            screen.blit(image, (draw_pos[0] - center[0] + W_W / 2 , draw_pos[1] + W_H / 2 - center[1]))
+            return
+
         '''if draw_particles:
             for p in self.particles:
                 viewer.draw_polyline(p.poly, color=p.color, linewidth=5)'''
@@ -260,7 +297,10 @@ class Car:
                 #trans = Box2D.b2Transform()
 
                 path = [-scale*(tmp*((trans*v)-offset)) + (W_W/2, W_H/2) for v in f.shape.vertices]
-                pygame.draw.polygon(screen, [255 * i for i in obj.color], path)
+                if "phase" not in obj.__dict__:
+                    pygame.draw.polygon(screen, color, path)
+                else:
+                    pygame.draw.polygon(screen, [255 * i for i in obj.color], path)
                 #object_to_draw.append(([255 * i for i in obj.color], path))
                 if "phase" not in obj.__dict__: continue
                 a1 = obj.phase
@@ -279,6 +319,38 @@ class Car:
                 white_poly_path = [-scale*(tmp*((trans*v)-offset)) + (W_W/2, W_H/2) for v in white_poly]
                 pygame.draw.polygon(screen, WHEEL_WHITE, white_poly_path)
                 #object_to_draw.append((WHEEL_WHITE, white_poly_path))
+
+    def draw_for_world_map(self, surface, world_scale, world_width,world_height):
+        for obj in self.drawlist:
+            for f in obj.fixtures:
+                trans = f.body.transform
+                tmp = Box2D.b2Transform()
+                tmp.position = (0, 0)
+                tmp.angle = -self.hull.angle
+                #trans = Box2D.b2Transform()
+
+                path = [-world_scale*(((trans*v))) + (world_width/2, world_height/2) for v in f.shape.vertices]
+                '''if "phase" not in obj.__dict__:
+                    pygame.draw.polygon(surface, color, path)
+                else:'''
+                pygame.draw.polygon(surface, [255 * i for i in obj.color], path)
+                #object_to_draw.append(([255 * i for i in obj.color], path))
+                if "phase" not in obj.__dict__: continue
+                a1 = obj.phase
+                a2 = obj.phase + 1.2  # radians
+                s1 = math.sin(a1)
+                s2 = math.sin(a2)
+                c1 = math.cos(a1)
+                c2 = math.cos(a2)
+                if s1 > 0 and s2 > 0: continue
+                if s1 > 0: c1 = np.sign(c1)
+                if s2 > 0: c2 = np.sign(c2)
+                white_poly = [
+                    (-WHEEL_W*SIZE, +WHEEL_R*c1*SIZE), (+WHEEL_W*SIZE, +WHEEL_R*c1*SIZE),
+                    (+WHEEL_W*SIZE, +WHEEL_R*c2*SIZE), (-WHEEL_W*SIZE, +WHEEL_R*c2*SIZE)
+                    ]
+                white_poly_path = [-world_scale*(((trans*v))) + (world_width/2, world_height/2) for v in white_poly]
+                pygame.draw.polygon(surface, WHEEL_WHITE, white_poly_path)
 
     def _create_particle(self, point1, point2, grass):
         class Particle:
