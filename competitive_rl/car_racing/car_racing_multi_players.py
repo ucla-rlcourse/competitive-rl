@@ -712,6 +712,7 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             plt.imshow(obs[i])
             plt.show()
+        self.show_all_car_obs = False
 
 if __name__ == "__main__":
 
@@ -775,7 +776,6 @@ if __name__ == "__main__":
         observation, reward, done, info = env.step(a)
         if env.show_all_car_obs == True:
             env.show_all_obs(observation)
-            env.show_all_car_obs = False
         pygame.display.flip()
 
         clock.tick(60)
