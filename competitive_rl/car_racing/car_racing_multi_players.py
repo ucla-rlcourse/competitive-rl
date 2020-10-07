@@ -86,7 +86,7 @@ initial_camera_scale = 1
 initial_camera_offset = (0,0)
 initial_camera_angle = 0
 car_scale = 15
-num_player = 6
+num_player = 4
 class FrictionDetector(contactListener):
     def __init__(self, env):
         contactListener.__init__(self)
@@ -462,7 +462,8 @@ class CarRacing(gym.Env, EzPickle):
             self.camera_follow = i
             self.camera_update("state_pixel")
             self.get_rendered_screen_ver2(self.observation_playground, self.observation_screens[i], mode="state_pixel")
-            self.obs[i] = self.output_this_car_obsearvation(self.observation_screens[i])
+            self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
+            self.obs[i] = np.rot90(self.obs[i], 3)
         self.camera_follow = original_follow
         self.camera_update()
 
@@ -667,19 +668,6 @@ class CarRacing(gym.Env, EzPickle):
             self.render_indicators_for_pygame(surface, width=STATE_W, height=STATE_H,scale=5)
         return surface
 
-    def get_all_cars_observations(self):
-        original_follow =self.camera_follow
-        obs = []
-        for i in range(self.num_player):
-            self.camera_follow = i
-            self.camera_update("state_pixel")
-            surface = self.get_rendered_screen(self.observation_screens[i], mode="state_pixel")
-            arr = output_this_car_obsearvation(surface)
-            obs.append(arr)
-        self.camera_follow = original_follow
-        self.camera_update()
-        return obs
-
     def get_rendered_screen_ver2(self, playground, playground_surface, mode="human"):
 
         if mode == "human":
@@ -695,11 +683,6 @@ class CarRacing(gym.Env, EzPickle):
                 car.draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset, angle=self.camera_angle,
                                     scale=self.camera_scale, mode="image_ob")
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
-
-    def output_this_car_obsearvation(self, screen):
-        image_data = pygame.surfarray.array3d(screen)
-        arr = image_data
-        return arr
 
     def show_all_obs(self, obs):
         for i in range(self.num_player):
