@@ -259,9 +259,6 @@ class Car:
             tmp = Box2D.b2Transform()
             tmp.position = (0, 0)
             tmp.angle = -angle
-            tmp1 = Box2D.b2Transform()
-            tmp1.position = (0, 0)
-            tmp1.angle = angle
             image = self.image
             image = pygame.transform.rotate(image, 57.295779513 * (-self.hull.angle+angle))
             pos = self.hull.position
@@ -274,9 +271,6 @@ class Car:
             tmp = Box2D.b2Transform()
             tmp.position = (0, 0)
             tmp.angle = -angle
-            tmp1 = Box2D.b2Transform()
-            tmp1.position = (0, 0)
-            tmp1.angle = angle
             image = self.ob_image
             image = pygame.transform.rotate(image, 57.295779513 * (-self.hull.angle+angle))
             pos = self.hull.position
