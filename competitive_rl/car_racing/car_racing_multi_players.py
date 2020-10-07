@@ -87,7 +87,6 @@ initial_camera_offset = (0,0)
 initial_camera_angle = 0
 car_scale = 15
 num_player = 6
-
 class FrictionDetector(contactListener):
     def __init__(self, env):
         contactListener.__init__(self)
@@ -440,8 +439,6 @@ class CarRacing(gym.Env, EzPickle):
         self.world.Step(1.0/FPS, 6*30, 2*30)
         self.t += 1.0/FPS
 
-        #self.state = self.render("state_pixels")
-
         step_rewards = [0] * self.num_player
 
         if action is not None:  # First step without action, called from reset()
@@ -458,10 +455,18 @@ class CarRacing(gym.Env, EzPickle):
                 if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
                     self.done[i] = 1
                     step_rewards[i] = -100
+        
+        # Centralize the logic of rendering observation state into the step function
+        original_follow = self.camera_follow
+        for i in range(self.num_player):
+            self.camera_follow = i
+            self.camera_update("state_pixel")
+            self.get_rendered_screen_ver2(self.observation_playground, self.observation_screens[i], mode="state_pixel")
+            self.obs[i] = self.output_this_car_obsearvation(self.observation_screens[i])
+        self.camera_follow = original_follow
+        self.camera_update()
 
-        #return self.state, step_reward, done, {}
-        return self.get_all_cars_obs(), step_rewards, self.done, {}
-        return self.state, step_rewards, self.done, {}
+        return self.obs, step_rewards, self.done, {}
 
     def close(self):
         if self.viewer is not None:
@@ -690,18 +695,6 @@ class CarRacing(gym.Env, EzPickle):
                 car.draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset, angle=self.camera_angle,
                                     scale=self.camera_scale, mode="image_ob")
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
-
-    def get_all_cars_obs(self):
-        original_follow = self.camera_follow
-        for i in range(self.num_player):
-            self.camera_follow = i
-            self.camera_update("state_pixel")
-            self.get_rendered_screen_ver2(self.observation_playground, self.observation_screens[i], mode="state_pixel")
-            arr = self.output_this_car_obsearvation(self.observation_screens[i])
-            self.obs[i] = arr
-        self.camera_follow = original_follow
-        self.camera_update()
-        return self.obs
 
     def output_this_car_obsearvation(self, screen):
         image_data = pygame.surfarray.array3d(screen)
