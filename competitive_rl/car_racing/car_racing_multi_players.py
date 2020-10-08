@@ -461,7 +461,7 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             self.camera_follow = i
             self.camera_update("state_pixel")
-            self.get_rendered_screen_ver2(self.observation_playground, self.observation_screens[i], mode="state_pixel")
+            self.get_rendered_screen_ver2(self.observation_playground, self.observation_screens[i], mode="state_pixel", drawing_for_player_num = i)
             self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
             self.obs[i] = np.rot90(self.obs[i], 3)
         self.camera_follow = original_follow
@@ -640,53 +640,27 @@ class CarRacing(gym.Env, EzPickle):
             if input_number == -3:
                 self.isopen = False
 
-    def get_rendered_screen(self, surface, mode = "human"):
-        if mode == "human":
-
-
-            self.render_road_for_pygame(surface)
-
-            for i in range(len(self.cars)):
-                if self.camera_follow == i:
-                    self.cars[i].draw_for_pygame(surface, width, height, offset=self.camera_offset, angle=self.camera_angle,
-                                        scale=self.camera_scale)
-                else:
-                    self.cars[i].draw_for_pygame(surface, width, height, offset=self.camera_offset,
-                                                angle=self.camera_angle,
-                                                scale=self.camera_scale, color = (0,0,0))
-            self.render_indicators_for_pygame(surface)
-
-            return surface
-        if mode == "state_pixel":
-
-            self.render_road_for_pygame(surface, width=STATE_W, height=STATE_H)
-
-            for car in self.cars:
-                car.draw_for_pygame(surface, STATE_W, STATE_H, offset=self.camera_offset, angle=self.camera_angle,
-                                    scale=self.camera_scale)
-
-            self.render_indicators_for_pygame(surface, width=STATE_W, height=STATE_H,scale=5)
-        return surface
-
-    def get_rendered_screen_ver2(self, playground, playground_surface, mode="human"):
-
+    def get_rendered_screen_ver2(self, playground, playground_surface, mode="human", drawing_for_player_num=None):
         if mode == "human":
             self.camera_view(playground, playground_surface)
             for car in self.cars:
                 car.draw_for_pygame(playground_surface, width, height, offset=self.camera_offset, angle=self.camera_angle,
-                                    scale=self.camera_scale, mode="image")
+                                    scale=self.camera_scale, mode="human")
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
 
         if mode == "state_pixel":
             self.camera_view(playground, playground_surface, mode="state_pixel")
-            for car in self.cars:
-                car.draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset, angle=self.camera_angle,
-                                    scale=self.camera_scale, mode="image_ob")
+            for i in range(self.num_player):
+                self.cars[i].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset, angle=self.camera_angle,
+                                    scale=self.camera_scale, main_car_color=(drawing_for_player_num == i))
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
 
-    def show_all_obs(self, obs):
+    def show_all_obs(self, obs, grayscale=False):
         for i in range(self.num_player):
-            plt.imshow(obs[i])
+            if grayscale:
+                plt.imshow(obs[i], cmap=plt.get_cmap('gray'))
+            else:
+                plt.imshow(obs[i])
             plt.show()
         self.show_all_car_obs = False
 
@@ -750,7 +724,7 @@ if __name__ == "__main__":
         env.get_rendered_screen_ver2(playground, playground_surface)
         screen.blit(playground_surface, (0, 0))
         observation, reward, done, info = env.step(a)
-        if env.show_all_car_obs == True:
+        if env.show_all_car_obs:
             env.show_all_obs(observation)
         pygame.display.flip()
 
