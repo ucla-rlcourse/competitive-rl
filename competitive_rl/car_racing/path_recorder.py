@@ -2,7 +2,6 @@ import json
 
 from Box2D import Box2D, b2Vec2
 
-from competitive_rl.car_racing.color_mananger import floatToRgb
 from competitive_rl.car_racing.pygame_rendering import draw_dot
 
 
