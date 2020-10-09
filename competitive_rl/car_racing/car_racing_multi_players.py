@@ -426,6 +426,8 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             self.cars.append(Car(self.world, *self.track[0][1:4], i))
 
+        self.camera_follow = 0
+        self.camera_update()
         #return self.step(None)[0]
 
     def step(self, action):
@@ -529,7 +531,8 @@ class CarRacing(gym.Env, EzPickle):
             if to_print:
                 pygame.draw.polygon(screen, [255 * i for i in color[env.camera_follow]], path)
 
-    def render_road_for_world_map(self, screen):
+    def render_road_for_world_map(self):
+        screen = pygame.Surface(self.world_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         k = PLAYFIELD / 20.0
         square_to_draw = []
@@ -550,8 +553,8 @@ class CarRacing(gym.Env, EzPickle):
 
         return screen
 
-    def render_road_for_observation_map(self, screen):
-
+    def render_road_for_observation_map(self):
+        screen = pygame.Surface(env.world_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         k = PLAYFIELD / 20.0
         square_to_draw = []
@@ -619,7 +622,7 @@ class CarRacing(gym.Env, EzPickle):
             tmp.position = (0, 0)
             tmp.angle = angle
             if mode == "state_pixel":
-                self.camera_offset = self.cars[self.camera_follow].hull.position + tmp*(0,16)
+                self.camera_offset = self.cars[self.camera_follow].hull.position + tmp * (0,16)
                 self.camera_angle = angle
                 self.camera_scale = self.obs_scale
             elif mode == "human":
@@ -665,63 +668,25 @@ class CarRacing(gym.Env, EzPickle):
         self.show_all_car_obs = False
 
 if __name__ == "__main__":
-
     pygame.init()
     pygame.font.init()
     env = CarRacing(num_player=num_player)
-
-    env.reset(use_local_track="./track/test3.json",record_track_to="")
+    
     # example: env.reset(use_local_track="./track/test.json",record_track_to="")
     # example: env.reset(use_local_track="",record_track_to="./track")
+    env.reset(use_local_track="./track/test3.json",record_track_to="")
     a = [[0.0, 0.0, 0.0] for _ in range(num_player)]
-    #screen = pygame.display.set_mode(window_size, pygame.DOUBLEBUF|pygame.OPENGL)
     screen = pygame.display.set_mode(window_size)
-    '''file = open("./car_path/path3.json", 'r', encoding='utf-8')
-    path_read = json.load(file)
-
-    car_to_record = []
-
-    path = [ {"positions":[],"angles":[],"fixtures":[]} for _ in range(num_player)]
-
-    while env.isopen:
-        env.manage_input(key_phrase(a))
-        env.camera_update()
-        observation, reward, done, info = env.step(a)
-        if env.show_all_car_obs == True:
-            show_all_obs(observation)
-            env.show_all_car_obs = False
-
-        for car_number in car_to_record:
-            position = [i for i in env.cars[car_number].hull.position]
-            angle = env.cars[car_number].hull.angle
-            path_record(path[car_number], position=position, angle=angle)
-
-
-        screen = env.get_rendered_screen(screen)
-
-        #path_drawer(screen, path_read, env.camera_offset, env.camera_angle, env.camera_scale, width, height)
-        pygame.display.flip()
-
-    for car_number in car_to_record:
-        path_record_to_file((f"./car_path/{car_number }" + datetime.datetime.fromtimestamp(time.time()).strftime(
-                f"%Y-%m-%d_%H-%M-%S_path.json")), path[car_number])'''
 
     playground_surface = pygame.display.set_mode(window_size)
-    playground = pygame.Surface(env.world_size)
-    observation_playground = pygame.Surface(env.world_size)
-
-    env.render_road_for_world_map(playground)
-    env.render_road_for_observation_map(observation_playground)
-
-    env.playground = playground
-    env.observation_playground = observation_playground
-    env.camera_follow = 0
-    env.camera_update()
+    env.playground = env.render_road_for_world_map()
+    env.observation_playground = env.render_road_for_observation_map()
     clock = pygame.time.Clock()
     while True:
+        print(env.screen)
         env.manage_input(key_phrase(a))
         env.camera_update()
-        env.get_rendered_screen_ver2(playground, playground_surface)
+        env.get_rendered_screen_ver2(env.playground, playground_surface)
         screen.blit(playground_surface, (0, 0))
         observation, reward, done, info = env.step(a)
         if env.show_all_car_obs:
