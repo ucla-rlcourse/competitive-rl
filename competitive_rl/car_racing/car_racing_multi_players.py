@@ -671,7 +671,9 @@ class CarRacing(gym.Env, EzPickle):
     def show_all_obs(self, obs, grayscale=False):
         for i in range(self.num_player):
             if grayscale:
-                plt.imshow(obs[i], cmap=plt.get_cmap('gray'))
+                grayobs = np.dot(obs[i][...,:3], [0.299, 0.587, 0.114])
+                print(grayobs.shape)
+                plt.imshow(grayobs, cmap=plt.get_cmap('gray'))
             else:
                 plt.imshow(obs[i])
             plt.show()
@@ -691,7 +693,7 @@ if __name__ == "__main__":
         env.render()
         observation, reward, done, info = env.step(a)
         if env.show_all_car_obs:
-            env.show_all_obs(observation)
+            env.show_all_obs(observation, grayscale=True)
 
         clock.tick(60)
         fps = clock.get_fps()
