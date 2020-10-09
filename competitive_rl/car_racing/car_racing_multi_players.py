@@ -145,6 +145,8 @@ class CarRacing(gym.Env, EzPickle):
     }
 
     def __init__(self, num_player=1, verbose=1):
+        pygame.init()
+        pygame.font.init()
         EzPickle.__init__(self)
         self.seed()
         self.contactListener_keepref = FrictionDetector(self)
@@ -153,7 +155,8 @@ class CarRacing(gym.Env, EzPickle):
             contactListener=self.contactListener_keepref
         )
         self.viewer = None
-        self.screen = None
+        self.screen = pygame.display.set_mode(window_size)
+        self.playground_surface = pygame.display.set_mode(window_size)
         self.invisible_state_window = None
         self.invisible_video_window = None
         self.road = None
@@ -178,7 +181,6 @@ class CarRacing(gym.Env, EzPickle):
 
         self.isopen = True
 
-        self.screens = []
         self.world_map = None
         self.world_scale = 10
         self.obs_scale = (self.world_scale / (100 / math.sqrt(96)))
@@ -203,6 +205,7 @@ class CarRacing(gym.Env, EzPickle):
             shape=(STATE_H, STATE_W, 3),
             dtype=np.uint8
         )
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -643,13 +646,17 @@ class CarRacing(gym.Env, EzPickle):
             if input_number == -3:
                 self.isopen = False
 
-    def get_rendered_screen_ver2(self, playground, playground_surface, mode="human", drawing_for_player_num=None):
+    def get_rendered_screen_ver2(self, playground=None, playground_surface=None, mode="human", drawing_for_player_num=None):
         if mode == "human":
+            playground = self.playground
+            playground_surface = self.playground_surface
             self.camera_view(playground, playground_surface)
             for car in self.cars:
                 car.draw_for_pygame(playground_surface, width, height, offset=self.camera_offset, angle=self.camera_angle,
                                     scale=self.camera_scale, mode="human")
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
+            self.screen.blit(playground_surface, (0, 0))
+            pygame.display.flip()
 
         if mode == "state_pixel":
             self.camera_view(playground, playground_surface, mode="state_pixel")
@@ -668,30 +675,23 @@ class CarRacing(gym.Env, EzPickle):
         self.show_all_car_obs = False
 
 if __name__ == "__main__":
-    pygame.init()
-    pygame.font.init()
     env = CarRacing(num_player=num_player)
     
     # example: env.reset(use_local_track="./track/test.json",record_track_to="")
     # example: env.reset(use_local_track="",record_track_to="./track")
     env.reset(use_local_track="./track/test3.json",record_track_to="")
     a = [[0.0, 0.0, 0.0] for _ in range(num_player)]
-    screen = pygame.display.set_mode(window_size)
 
-    playground_surface = pygame.display.set_mode(window_size)
     env.playground = env.render_road_for_world_map()
     env.observation_playground = env.render_road_for_observation_map()
     clock = pygame.time.Clock()
     while True:
-        print(env.screen)
         env.manage_input(key_phrase(a))
         env.camera_update()
-        env.get_rendered_screen_ver2(env.playground, playground_surface)
-        screen.blit(playground_surface, (0, 0))
+        env.get_rendered_screen_ver2()
         observation, reward, done, info = env.step(a)
         if env.show_all_car_obs:
             env.show_all_obs(observation)
-        pygame.display.flip()
 
         clock.tick(60)
         fps = clock.get_fps()
