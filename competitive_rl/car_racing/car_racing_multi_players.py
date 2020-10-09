@@ -429,6 +429,8 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             self.cars.append(Car(self.world, *self.track[0][1:4], i))
 
+        self.playground = self.render_road_for_world_map()
+        self.observation_playground = self.render_road_for_observation_map()
         self.camera_follow = 0
         self.camera_update()
         #return self.step(None)[0]
@@ -466,7 +468,7 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             self.camera_follow = i
             self.camera_update("state_pixel")
-            self.get_rendered_screen_ver2(self.observation_playground, self.observation_screens[i], mode="state_pixel", drawing_for_player_num = i)
+            self.render(self.observation_playground, self.observation_screens[i], mode="state_pixel", drawing_for_player_num = i)
             self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
             self.obs[i] = np.rot90(self.obs[i], 3)
         self.camera_follow = original_follow
@@ -646,8 +648,9 @@ class CarRacing(gym.Env, EzPickle):
             if input_number == -3:
                 self.isopen = False
 
-    def get_rendered_screen_ver2(self, playground=None, playground_surface=None, mode="human", drawing_for_player_num=None):
+    def render(self, playground=None, playground_surface=None, mode="human", drawing_for_player_num=None):
         if mode == "human":
+            self.camera_update()
             playground = self.playground
             playground_surface = self.playground_surface
             self.camera_view(playground, playground_surface)
@@ -682,13 +685,10 @@ if __name__ == "__main__":
     env.reset(use_local_track="./track/test3.json",record_track_to="")
     a = [[0.0, 0.0, 0.0] for _ in range(num_player)]
 
-    env.playground = env.render_road_for_world_map()
-    env.observation_playground = env.render_road_for_observation_map()
     clock = pygame.time.Clock()
     while True:
         env.manage_input(key_phrase(a))
-        env.camera_update()
-        env.get_rendered_screen_ver2()
+        env.render()
         observation, reward, done, info = env.step(a)
         if env.show_all_car_obs:
             env.show_all_obs(observation)
