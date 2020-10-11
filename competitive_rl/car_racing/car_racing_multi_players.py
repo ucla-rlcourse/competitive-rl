@@ -437,6 +437,11 @@ class CarRacing(gym.Env, EzPickle):
         #return self.step(None)[0]
 
     def step(self, action):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
         if action is not None:
             for i in range(len(self.cars)):
                 self.cars[i].steer(-action[i][0])
