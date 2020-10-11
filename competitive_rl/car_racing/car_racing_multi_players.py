@@ -187,6 +187,7 @@ class CarRacing(gym.Env, EzPickle):
         self.world_size = world_width, world_height = 10000,10000
 
         self.obs = {}
+        self.info = ["" for x in range(self.num_player)]
 
         self.playground = None
         self.observation_playground = None
@@ -441,7 +442,7 @@ class CarRacing(gym.Env, EzPickle):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-
+                
         if action is not None:
             for i in range(len(self.cars)):
                 self.cars[i].steer(-action[i][0])
@@ -453,7 +454,6 @@ class CarRacing(gym.Env, EzPickle):
         self.t += 1.0/FPS
 
         step_rewards = [0] * self.num_player
-
         if action is not None:  # First step without action, called from reset()
             for i in range(self.num_player):
                 self.rewards[i] -= 0.1
@@ -463,6 +463,10 @@ class CarRacing(gym.Env, EzPickle):
                 step_rewards[i] = self.rewards[i] - self.prev_rewards[i]
                 self.prev_rewards[i] = self.rewards[i]
                 x, y = self.cars[i].hull.position
+
+                self.info[i] =  f"P{i}: Tiles_visited: {self.tile_visited_count[i]} / {len(self.track)}, "
+                self.info[i] += f"rewards: {self.rewards[i]}"
+
                 if self.tile_visited_count[i] == len(self.track):
                     self.done[i] = 1
                 if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
@@ -480,7 +484,7 @@ class CarRacing(gym.Env, EzPickle):
         self.camera_follow = original_follow
         self.camera_update()
 
-        return self.obs, step_rewards, self.done, {}
+        return self.obs, step_rewards, self.done, self.info
 
     def close(self):
         if self.viewer is not None:
