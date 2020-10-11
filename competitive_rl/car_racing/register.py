@@ -9,7 +9,7 @@ def register_competitive_envs():
         id="cCarRacing-v0",
         entry_point=CarRacing,
         max_episode_steps=1000,
-        reward_threshold=9000
+        reward_threshold=900
     )
     print(
         "Register car_racing_multiple_players environments.")
