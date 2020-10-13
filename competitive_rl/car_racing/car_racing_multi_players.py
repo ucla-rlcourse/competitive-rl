@@ -98,6 +98,7 @@ class FrictionDetector(contactListener):
         u2 = contact.fixtureB.body.userData
         if u1 and u2:
             if u1 and "car_number" in u1.__dict__ and u2 and "car_number" in u2.__dict__:
+                print("deduced")
                 self.env.rewards[u1.car_number] -= 1000 / FPS
                 self.env.rewards[u2.car_number] -= 1000 / FPS
                 return
@@ -161,20 +162,20 @@ class CarRacing(gym.Env, EzPickle):
         self.invisible_video_window = None
         self.road = None
         self.cars = []
-        self.rewards = []
-        self.prev_rewards = []
+        self.rewards = [0] * num_player
+        self.prev_rewards = [0] * num_player
         self.verbose = verbose
         self.num_player = num_player
         self.track = None
         self.done = []
-        self.state = []
         self.background = None
+        self.road_poly = None
 
-        self.camera_offset = initial_camera_offset
-        self.camera_scale = initial_camera_scale
-        self.camera_no_follow_scale = initial_camera_scale
-        self.car_scale = car_scale
-        self.camera_angle = initial_camera_angle
+        self.camera_offset = None
+        self.camera_scale = None
+        self.camera_no_follow_scale = None
+        self.car_scale = None
+        self.camera_angle = None
         self.camera_follow = -1
 
         self.show_all_car_obs = False
@@ -187,14 +188,13 @@ class CarRacing(gym.Env, EzPickle):
         self.world_size = world_width, world_height = 10000,10000
 
         self.obs = {}
-        self.info = ["" for x in range(self.num_player)]
+        self.info = None
 
         self.playground = None
         self.observation_playground = None
+        self.observation_screens = None
 
-        self.fd_tile = fixtureDef(
-            shape=polygonShape(vertices=[(0, 0), (1, 0), (1, -1), (0, -1)])
-        )
+        self.fd_tile = None
 
         self.action_space = spaces.Box(np.array([-1, 0, 0]),
                                        np.array([+1, +1, +1]),
@@ -218,7 +218,7 @@ class CarRacing(gym.Env, EzPickle):
         for t in self.road:
             self.world.DestroyBody(t)
         self.road = []
-        self.car.destroy()
+        self.cars = []
 
     def _create_track(self,use_local_track="", record_track_to=""):
         CHECKPOINTS = 12
@@ -406,12 +406,30 @@ class CarRacing(gym.Env, EzPickle):
 
     def reset(self, use_local_track="", record_track_to=""):
         self._destroy()
+        self.contactListener_keepref = FrictionDetector(self)
+        self.world = Box2D.b2World(
+            (0, 0),
+            contactListener=self.contactListener_keepref
+        )
+        # Reset camera
+        self.camera_offset = initial_camera_offset
+        self.camera_scale = initial_camera_scale
+        self.camera_no_follow_scale = initial_camera_scale
+        self.car_scale = car_scale
+        self.camera_angle = initial_camera_angle
+
+        # Reset rewards related
         self.rewards = [0] * self.num_player
         self.prev_rewards = [0] * self.num_player
         self.tile_visited_count = [0] * self.num_player
         self.done = [0]*self.num_player
         self.t = 0.0
         self.road_poly = []
+        self.fd_tile = fixtureDef(
+            shape=polygonShape(vertices=[(0, 0), (1, 0), (1, -1), (0, -1)])
+        )
+
+        # Reset rendering related
         self.observation_screens = [pygame.Surface((STATE_W,STATE_H))] * self.num_player
         self.world_map = pygame.Surface(self.world_size)
         self.playground = pygame.Surface(self.world_size)
@@ -428,14 +446,17 @@ class CarRacing(gym.Env, EzPickle):
                         "instances of this message)"
                     )
         for i in range(self.num_player):
-            print(*self.track[0][1:4])
+            # print(*self.track[0][1:4])
             self.cars.append(Car(self.world, *self.track[0][1:4], i))
 
         self.playground = self.render_road_for_world_map()
         self.observation_playground = self.render_road_for_observation_map()
+
+        self.info = ["" for x in range(self.num_player)]
+
         self.camera_follow = 0
         self.camera_update()
-        #return self.step(None)[0]
+        return self.step(None)[0]
 
     def step(self, action):
         for event in pygame.event.get():
@@ -464,8 +485,8 @@ class CarRacing(gym.Env, EzPickle):
                 self.prev_rewards[i] = self.rewards[i]
                 x, y = self.cars[i].hull.position
 
-                self.info[i] =  f"P{i}: Tiles_visited: {self.tile_visited_count[i]} / {len(self.track)}, "
-                self.info[i] += f"rewards: {self.rewards[i]}"
+                self.info[i] = f"P{i}: Tiles_visited: {self.tile_visited_count[i]} / {len(self.track)}, "
+                self.info[i] += f"rewards: {step_rewards[i]}"
 
                 if self.tile_visited_count[i] == len(self.track):
                     self.done[i] = 1
@@ -481,6 +502,12 @@ class CarRacing(gym.Env, EzPickle):
             self.render(self.observation_playground, self.observation_screens[i], mode="state_pixel", drawing_for_player_num = i)
             self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
             self.obs[i] = np.rot90(self.obs[i], 3)
+
+            # Grayscale converting
+            self.obs[i] = np.dot(self.obs[i][..., :3], [0.299, 0.587, 0.114])
+            # Cropping
+            self.obs[i] = self.obs[i][15:70, 20:75]
+
         self.camera_follow = original_follow
         self.camera_update()
 
@@ -511,7 +538,7 @@ class CarRacing(gym.Env, EzPickle):
         vertical_ind(screen, 10 * s, height - h, s, h, -0.01 * self.cars[self.camera_follow].wheels[3].omega, (0.2 * 255, 0, 255))
         horiz_ind(screen, 20 * s, height - 2 *  h, s, 2 * h, 10.0 * self.cars[self.camera_follow].wheels[0].joint.angle, (0, 255, 0))
         horiz_ind(screen, 30 * s, height - 2 *  h, s, 2 * h, 0.8 * self.cars[self.camera_follow].hull.angularVelocity, (255, 0, 0))
-        draw_text(screen, str("%04i" % self.rewards[self.camera_follow]), width/100, height - height/20,scale)
+        draw_text(screen, str("%08i" % self.rewards[self.camera_follow]), width/100, height - height/20,scale)
 
     def render_road_for_pygame(self, screen, width=width, height=height):
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
@@ -544,7 +571,7 @@ class CarRacing(gym.Env, EzPickle):
                 if pos[0] > -0 and pos[0] < width and pos[1] > -0 and pos[1] < height:
                     to_print = True
             if to_print:
-                pygame.draw.polygon(screen, [255 * i for i in color[self.camera_follow]], path)
+                pygame.draw.polygon(screen, (102, 102, 102), path)
 
     def render_road_for_world_map(self):
         screen = pygame.Surface(self.world_size)
@@ -564,7 +591,7 @@ class CarRacing(gym.Env, EzPickle):
 
         for poly, color in self.road_poly:
             path = [( self.world_scale * -v[0] + self.world_size[0]/2, self.world_scale * -v[1] + self.world_size[1]/2) for v in poly]
-            pygame.draw.polygon(screen, [255 * i for i in color[self.camera_follow]], path)
+            pygame.draw.polygon(screen, (102, 102, 102), path)
 
         return screen
 
@@ -590,7 +617,7 @@ class CarRacing(gym.Env, EzPickle):
             path = [
                 (self.obs_scale * -v[0] + self.world_size[0] / 2, self.obs_scale * -v[1] + self.world_size[1] / 2)
                 for v in poly]
-            pygame.draw.polygon(screen, [255 * i for i in color[self.camera_follow]], path)
+            pygame.draw.polygon(screen, (102, 102, 102), path)
 
         return screen
 
