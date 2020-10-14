@@ -50,9 +50,6 @@ from gym import spaces
 
 from gym.utils import seeding, EzPickle
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
-
 from competitive_rl.car_racing.car_dynamics import Car
 from competitive_rl.car_racing.controller import key_phrase
 from competitive_rl.car_racing.path_recorder import path_record, path_record_to_file, path_drawer
