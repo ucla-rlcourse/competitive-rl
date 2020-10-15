@@ -462,10 +462,13 @@ class CarRacing(gym.Env, EzPickle):
                 quit()
                 
         if action is not None:
-            for i in range(len(self.cars)):
-                self.cars[i].steer(-action[i][0])
-                self.cars[i].gas(action[i][1])
-                self.cars[i].brake(action[i][2])
+            self.cars[0].steer(-action[0])
+            self.cars[0].gas(action[1])
+            self.cars[0].brake(action[2])            
+	    #for i in range(len(self.cars)):
+            #    self.cars[i].steer(-action[i][0])
+            #    self.cars[i].gas(action[i][1])
+            #    self.cars[i].brake(action[i][2])
         for car in self.cars:
             car.step(1.0/FPS)
         self.world.Step(1.0/FPS, 6*30, 2*30)
