@@ -86,7 +86,7 @@ initial_camera_scale = 1
 initial_camera_offset = (0,0)
 initial_camera_angle = 0
 car_scale = 15
-num_player = 4
+num_player = 1
 class FrictionDetector(contactListener):
     def __init__(self, env):
         contactListener.__init__(self)
@@ -114,9 +114,11 @@ class FrictionDetector(contactListener):
 
         car_number = -1
         if u1 and "road_friction" in u1.__dict__:
+            self.env.ontrack_count = 0
             tile = u1
             obj = u2
         if u2 and "road_friction" in u2.__dict__:
+            self.env.ontrack_count = 0
             tile = u2
             obj = u1
         if not tile:
@@ -133,7 +135,8 @@ class FrictionDetector(contactListener):
             obj.tiles.add(tile)
             if not tile.road_visited[car_number]:
                 tile.road_visited[car_number] = True
-                self.env.rewards[car_number] += 1000.0/len(self.env.track)
+                # self.env.rewards[car_number] += 1000.0/len(self.env.track)
+                self.env.rewards[car_number] += 10
                 self.env.tile_visited_count[car_number] += 1
         else:
             obj.tiles.remove(tile)
@@ -179,6 +182,10 @@ class CarRacing(gym.Env, EzPickle):
         self.camera_follow = -1
 
         self.show_all_car_obs = False
+        self.ontrack_count = 0
+        self.tile_visited_count = None
+        self.idle_count = None
+        self.step_count = None
 
         self.isopen = True
 
@@ -203,7 +210,7 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(STATE_H, STATE_W, 3),
+            shape=(55, 55, 1),
             dtype=np.uint8
         )
 
@@ -419,9 +426,19 @@ class CarRacing(gym.Env, EzPickle):
         self.camera_angle = initial_camera_angle
 
         # Reset rewards related
+        print("*" * 50)
+        print(f"Reset with {self.step_count}steps")
+        print(f"Score: {self.rewards}")
+        if self.tile_visited_count:
+            print(f"Tile visited: {self.tile_visited_count[0]}")
+        print("*" * 50)
         self.rewards = [0] * self.num_player
         self.prev_rewards = [0] * self.num_player
         self.tile_visited_count = [0] * self.num_player
+        self.outbound_count = 0
+        self.idle_count = 0
+        self.step_count = 0
+
         self.done = [0]*self.num_player
         self.t = 0.0
         self.road_poly = []
@@ -463,16 +480,25 @@ class CarRacing(gym.Env, EzPickle):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-                
         if action is not None:
-            for i in range(len(self.cars)):
-                self.cars[i].steer(-action[i][0])
-                self.cars[i].gas(action[i][1])
-                self.cars[i].brake(action[i][2])
+            self.cars[0].steer(-action[0])
+            self.cars[0].gas(action[1])
+            self.cars[0].brake(action[2])
+            # if num_player == 1:
+            #     self.cars[0].steer(-action[0])
+            #     self.cars[0].gas(action[1])
+            #     self.cars[0].brake(action[2])
+            # else:
+            # for i in range(len(self.cars)):
+            #     self.cars[i].steer(-action[i][0])
+            #     self.cars[i].gas(action[i][1])
+            #     self.cars[i].brake(action[i][2])
         for car in self.cars:
             car.step(1.0/FPS)
         self.world.Step(1.0/FPS, 6*30, 2*30)
         self.t += 1.0/FPS
+        self.ontrack_count += 1
+        self.step_count += 1
 
         step_rewards = [0] * self.num_player
         if action is not None:  # First step without action, called from reset()
@@ -491,8 +517,16 @@ class CarRacing(gym.Env, EzPickle):
                 if self.tile_visited_count[i] == len(self.track):
                     self.done[i] = 1
                 if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
+                    print("Out of Bound")
                     self.done[i] = 1
-                    step_rewards[i] = -100
+                    # step_rewards[i] = -50
+                # if self.ontrack_count >= 190:
+                #     print("Out of Road")
+                #     self.done[i] = 1
+                    # step_rewards[i] = -50
+                if self.step_count > 800 and self.tile_visited_count[0] < 2:
+                    print("Killed, idle")
+                    self.done[i] = 1
         
         # Centralize the logic of rendering observation state into the step function
         original_follow = self.camera_follow
@@ -505,13 +539,14 @@ class CarRacing(gym.Env, EzPickle):
 
             # Grayscale converting
             self.obs[i] = np.dot(self.obs[i][..., :3], [0.299, 0.587, 0.114])
-            # Cropping
+            # # Cropping
             self.obs[i] = self.obs[i][15:70, 20:75]
+            self.obs[i] = np.reshape(self.obs[i], (55, 55, 1))
 
         self.camera_follow = original_follow
         self.camera_update()
 
-        return self.obs, step_rewards, self.done, self.info
+        return self.obs[0], step_rewards[0], self.done[0], {}
 
     def close(self):
         if self.viewer is not None:
