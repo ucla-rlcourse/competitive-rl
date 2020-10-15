@@ -50,9 +50,6 @@ from gym import spaces
 
 from gym.utils import seeding, EzPickle
 
-from OpenGL.GL import *
-from OpenGL.GLU import *
-
 from competitive_rl.car_racing.car_dynamics import Car
 from competitive_rl.car_racing.controller import key_phrase
 from competitive_rl.car_racing.path_recorder import path_record, path_record_to_file, path_drawer
@@ -484,15 +481,7 @@ class CarRacing(gym.Env, EzPickle):
             self.cars[0].steer(-action[0])
             self.cars[0].gas(action[1])
             self.cars[0].brake(action[2])
-            # if num_player == 1:
-            #     self.cars[0].steer(-action[0])
-            #     self.cars[0].gas(action[1])
-            #     self.cars[0].brake(action[2])
-            # else:
-            # for i in range(len(self.cars)):
-            #     self.cars[i].steer(-action[i][0])
-            #     self.cars[i].gas(action[i][1])
-            #     self.cars[i].brake(action[i][2])
+            
         for car in self.cars:
             car.step(1.0/FPS)
         self.world.Step(1.0/FPS, 6*30, 2*30)
