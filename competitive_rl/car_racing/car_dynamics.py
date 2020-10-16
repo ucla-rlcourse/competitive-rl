@@ -6,6 +6,7 @@ This simulation is a bit more detailed, with wheels rotation.
 
 Created by Oleg Klimov. Licensed on the same terms as the rest of OpenAI Gym.
 """
+import os
 
 import numpy as np
 import math
@@ -76,7 +77,7 @@ class Car:
         self.wheels = []
         self.fuel_spent = 0.0
 
-        self.image = pygame.image.load("./images/car.png")
+        self.image = pygame.image.load(f"{os.path.dirname(__file__)}/images/car.png")
 
         self.ob_image = pygame.transform.scale(self.image, (3, 5))
 
