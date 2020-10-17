@@ -189,6 +189,7 @@ class CarRacing(gym.Env, EzPickle):
         self.world_size = world_width, world_height = 10000,10000
 
         self.obs = {}
+        self.info = ["" for x in range(self.num_player)]
 
         self.playground = None
         self.observation_playground = None
@@ -345,7 +346,7 @@ class CarRacing(gym.Env, EzPickle):
             data = json.load(file)
             for i in range(len(data)):
                 track.append((data[i][0],data[i][1],data[i][2],data[i][3]))
-            print(track)
+            # print(track)
         # Red-white border on hard turns
         border = [False] * len(track)
         for i in range(len(track)):
@@ -434,6 +435,7 @@ class CarRacing(gym.Env, EzPickle):
                         "instances of this message)"
                     )
         for i in range(self.num_player):
+            print(*self.track[0][1:4])
             self.cars.append(Car(self.world, *self.track[0][1:4], i))
         self.playground = self.render_road_for_world_map()
         self.observation_playground = self.render_road_for_observation_map()
@@ -442,6 +444,11 @@ class CarRacing(gym.Env, EzPickle):
         return self.step(None)[0]
 
     def step(self, action):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+                
         if action is not None:
             if self.num_player > 1 :
                 for i in range(len(self.cars)):
@@ -459,7 +466,6 @@ class CarRacing(gym.Env, EzPickle):
         self.t += 1.0/FPS
 
         step_rewards = [0] * self.num_player
-
         if action is not None:  # First step without action, called from reset()
             for i in range(self.num_player):
                 self.rewards[i] -= 0.1
@@ -469,6 +475,10 @@ class CarRacing(gym.Env, EzPickle):
                 step_rewards[i] = self.rewards[i] - self.prev_rewards[i]
                 self.prev_rewards[i] = self.rewards[i]
                 x, y = self.cars[i].hull.position
+
+                self.info[i] =  f"P{i}: Tiles_visited: {self.tile_visited_count[i]} / {len(self.track)}, "
+                self.info[i] += f"rewards: {self.rewards[i]}"
+
                 if self.tile_visited_count[i] == len(self.track):
                     #print("car finishs all tiles")
                     self.done[i] = 1
@@ -552,7 +562,6 @@ class CarRacing(gym.Env, EzPickle):
                     to_print = True
             if to_print:
                 pygame.draw.polygon(screen, [255 * i for i in color], path)
-
     def render_road_for_world_map(self):
         screen = pygame.Surface(self.world_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
@@ -572,7 +581,6 @@ class CarRacing(gym.Env, EzPickle):
         for poly, color in self.road_poly:
             path = [( self.world_scale * -v[0] + self.world_size[0]/2, self.world_scale * -v[1] + self.world_size[1]/2) for v in poly]
             pygame.draw.polygon(screen, [255 * i for i in color], path)
-
         return screen
 
     def render_road_for_observation_map(self):
@@ -598,7 +606,6 @@ class CarRacing(gym.Env, EzPickle):
                 (self.obs_scale * -v[0] + self.world_size[0] / 2, self.obs_scale * -v[1] + self.world_size[1] / 2)
                 for v in poly]
             pygame.draw.polygon(screen, [255 * i for i in color], path)
-
         return screen
 
     def render_cars_for_world_map(self, screen):
@@ -689,7 +696,6 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             if grayscale:
                 grayobs = np.dot(obs[i][...,:3], [0.299, 0.587, 0.114])
-                print(grayobs.shape)
                 plt.imshow(grayobs, cmap=plt.get_cmap('gray'))
             else:
                 plt.imshow(obs[i])
@@ -715,5 +721,4 @@ if __name__ == "__main__":
             env.show_all_obs([observation], grayscale=True)
         clock.tick(60)
         fps = clock.get_fps()
-        #print(fps)
 
