@@ -267,7 +267,7 @@ class Car:
             image = pygame.transform.rotate(image, 57.295779513 * (-self.hull.angle+angle))
             pos = self.hull.position
             center = image.get_rect().center
-            draw_pos = scale * (tmp * (offset - pos))
+            draw_pos = scale * (tmp * (Box2D.b2Vec2(offset) - pos))
             screen.blit(image, (draw_pos[0] - center[0] + W_W / 2 , draw_pos[1] + W_H / 2 - center[1]))
             return
 
