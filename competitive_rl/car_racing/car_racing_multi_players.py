@@ -536,11 +536,11 @@ class CarRacing(gym.Env, EzPickle):
             self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
             self.obs[i] = np.rot90(self.obs[i], 3)
 
-            # Grayscale converting
-            self.obs[i] = np.dot(self.obs[i][..., :3], [0.299, 0.587, 0.114])
-            # # Cropping
-            self.obs[i] = self.obs[i][15:70, 20:75]
-            self.obs[i] = np.reshape(self.obs[i], (55, 55, 1))
+            # # Grayscale converting
+            # self.obs[i] = np.dot(self.obs[i][..., :3], [0.299, 0.587, 0.114])
+            # # # Cropping
+            # self.obs[i] = self.obs[i][15:70, 20:75]
+            # self.obs[i] = np.reshape(self.obs[i], (55, 55, 1))
 
         self.camera_follow = original_follow
         self.camera_update()
