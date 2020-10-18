@@ -271,7 +271,7 @@ if __name__ == "__main__":
     agent = Agent()
     env = Env()
     #if args.vis:
-    draw_reward = DrawLine(env="car", title="PPO", xlabel="Episode", ylabel="Moving averaged episode reward")
+    # draw_reward = DrawLine(env="car", title="PPO", xlabel="Episode", ylabel="Moving averaged episode reward")
 
     training_records = []
     running_score = 0
