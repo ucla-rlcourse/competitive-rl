@@ -59,19 +59,24 @@ parser.add_argument('--img-stack', type=int, default=4, metavar='N', help='stack
 parser.add_argument('--seed', type=int, default=0, metavar='N', help='random seed (default: 0)')
 parser.add_argument('--render', action='store_true', help='render the environment')
 parser.add_argument('--vis', action='store_true', help='use visdom')
+parser.add_argument('--headless', action='store_true', help='use headless render')
 parser.add_argument(
     '--log-interval', type=int, default=10, metavar='N', help='interval between training status logs (default: 10)')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
-device = torch.device("cuda" if use_cuda else "cpu")
+# device = torch.device("cuda" if use_cuda else "cpu"))
+device = torch.device("cuda")
 torch.manual_seed(args.seed)
-if use_cuda:
-    torch.cuda.manual_seed(args.seed)
+# if use_cuda:
+#     torch.cuda.manual_seed(args.seed)
 
 transition = np.dtype([('s', np.float64, (args.img_stack, 96, 96)), ('a', np.float64, (3,)), ('a_logp', np.float64),
                        ('r', np.float64), ('s_', np.float64, (args.img_stack, 96, 96))])
 
+if args.headless:
+    import os
+    os.environ['SDL_VIDEODRIVER'] = 'dummy'
 
 class Env():
     """
@@ -216,7 +221,7 @@ class Agent():
         return action, a_logp
 
     def save_param(self):
-        torch.save(self.net.state_dict(), 'param/car0.0.pkl')
+        torch.save(self.net.state_dict(), 'param/car_kaggle_output.pkl')
 
     def store(self, transition):
         self.buffer[self.counter] = transition
@@ -271,7 +276,7 @@ if __name__ == "__main__":
     training_records = []
     running_score = 0
     state = env.reset()
-    for i_ep in range(100000):
+    for i_ep in range(10000):
         score = 0
         state = env.reset()
 
@@ -290,8 +295,7 @@ if __name__ == "__main__":
         running_score = running_score * 0.99 + score * 0.01
 
         if i_ep % args.log_interval == 0:
-            #if args.vis:
-            draw_reward(xdata=i_ep, ydata=running_score)
+            # draw_reward(xdata=i_ep, ydata=running_score)
             print('Ep {}\tLast score: {:.2f}\tMoving average score: {:.2f}'.format(i_ep, score, running_score))
             agent.save_param()
         if running_score > env.reward_threshold:
