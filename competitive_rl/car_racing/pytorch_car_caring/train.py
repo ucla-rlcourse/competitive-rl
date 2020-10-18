@@ -84,7 +84,7 @@ class Env():
     """
 
     def __init__(self):
-        self.env = gym.make('cCarRacing-v0')
+        self.env = gym.make('CarRacing-v0')
         self.env.seed(args.seed)
         self.reward_threshold = self.env.spec.reward_threshold
 
@@ -294,7 +294,7 @@ if __name__ == "__main__":
                 break
         running_score = running_score * 0.99 + score * 0.01
 
-        if i_ep % args.log_interval == 0:
+        if i_ep % 10 == 0:
             # draw_reward(xdata=i_ep, ydata=running_score)
             print('Ep {}\tLast score: {:.2f}\tMoving average score: {:.2f}'.format(i_ep, score, running_score))
             agent.save_param()
