@@ -65,8 +65,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
-# device = torch.device("cuda" if use_cuda else "cpu"))
-device = torch.device("cuda")
+device = torch.device("cuda" if use_cuda else "cpu")
 torch.manual_seed(args.seed)
 # if use_cuda:
 #     torch.cuda.manual_seed(args.seed)
@@ -84,7 +83,7 @@ class Env():
     """
 
     def __init__(self):
-        self.env = gym.make('CarRacing-v0')
+        self.env = gym.make('cCarRacing-v0', verbose=0)
         self.env.seed(args.seed)
         self.reward_threshold = self.env.spec.reward_threshold
 
@@ -221,7 +220,7 @@ class Agent():
         return action, a_logp
 
     def save_param(self):
-        torch.save(self.net.state_dict(), 'param/car_kaggle_output.pkl')
+        torch.save(self.net.state_dict(), 'param/training_result.pkl')
 
     def store(self, transition):
         self.buffer[self.counter] = transition
@@ -270,13 +269,13 @@ class Agent():
 if __name__ == "__main__":
     agent = Agent()
     env = Env()
-    #if args.vis:
-    # draw_reward = DrawLine(env="car", title="PPO", xlabel="Episode", ylabel="Moving averaged episode reward")
+    if args.vis:
+        draw_reward = DrawLine(env="car", title="PPO", xlabel="Episode", ylabel="Moving averaged episode reward")
 
     training_records = []
     running_score = 0
     state = env.reset()
-    for i_ep in range(10000):
+    for i_ep in range(5000):
         score = 0
         state = env.reset()
 
@@ -294,8 +293,9 @@ if __name__ == "__main__":
                 break
         running_score = running_score * 0.99 + score * 0.01
 
-        if i_ep % 10 == 0:
-            # draw_reward(xdata=i_ep, ydata=running_score)
+        if i_ep % args.log_interval == 0:
+            if args.vis:
+                draw_reward(xdata=i_ep, ydata=running_score)
             print('Ep {}\tLast score: {:.2f}\tMoving average score: {:.2f}'.format(i_ep, score, running_score))
             agent.save_param()
         if running_score > env.reward_threshold:
