@@ -209,7 +209,7 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(55, 55, 1),
+            shape=(96, 96, 3),
             dtype=np.uint8
         )
 
@@ -522,10 +522,6 @@ class CarRacing(gym.Env, EzPickle):
                 #     print("Out of Road")
                 #     self.done[i] = 1
                     # step_rewards[i] = -50
-                if self.step_count > 800 and self.tile_visited_count[0] < 2:
-                    print("Killed, idle")
-                    step_rewards[i] = -100
-                    self.done[i] = 1
         
         # Centralize the logic of rendering observation state into the step function
         original_follow = self.camera_follow
