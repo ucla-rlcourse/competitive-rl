@@ -426,13 +426,6 @@ class CarRacing(gym.Env, EzPickle):
         self.camera_angle = initial_camera_angle
 
         # Reset rewards related
-        print("*" * 50)
-        print(f"Reset with {self.step_count}steps")
-        print(f"Score: {self.rewards}")
-        if self.tile_visited_count:
-            print(f"Tile visited: {self.tile_visited_count[0]}")
-        print("*" * 50)
-        print()
         self.rewards = [0] * self.num_player
         self.prev_rewards = [0] * self.num_player
         self.tile_visited_count = [0] * self.num_player
