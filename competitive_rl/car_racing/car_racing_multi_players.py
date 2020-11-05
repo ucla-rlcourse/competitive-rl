@@ -86,6 +86,12 @@ initial_camera_offset = tmp
 initial_camera_angle = 0
 car_scale = 15
 num_player = 1
+
+DARK_COLOR = (0, 0, 51)
+MID_COLOR = (0, 40, 100)
+LIGHT_COLOR = (16, 87, 100)
+TILE_COLOR = (80, 80, 80)
+
 class FrictionDetector(contactListener):
     def __init__(self, env):
         contactListener.__init__(self)
@@ -134,8 +140,7 @@ class FrictionDetector(contactListener):
             obj.tiles.add(tile)
             if not tile.road_visited[car_number]:
                 tile.road_visited[car_number] = True
-                # self.env.rewards[car_number] += 1000.0/len(self.env.track)
-                self.env.rewards[car_number] += 10
+                self.env.rewards[car_number] += 5
                 self.env.tile_visited_count[car_number] += 1
         else:
             obj.tiles.remove(tile)
@@ -190,7 +195,7 @@ class CarRacing(gym.Env, EzPickle):
 
         self.world_map = None
         self.world_scale = 10
-        self.obs_scale = (self.world_scale / (100 / math.sqrt(96))) * 1.8
+        self.obs_scale = (self.world_scale / (100 / math.sqrt(96))) * 1.15
         self.world_size = world_width, world_height = 10000,10000
 
         self.obs = {}
@@ -364,14 +369,18 @@ class CarRacing(gym.Env, EzPickle):
                 border[i-neg] |= border[i]
 
         # Create tiles
-        for i in range(len(track)):
+        for i in range(len(track)-1, -1, -1):
             alpha1, beta1, x1, y1 = track[i]
             alpha2, beta2, x2, y2 = track[i-1]
             road1_l = (x1 - TRACK_WIDTH*math.cos(beta1), y1 - TRACK_WIDTH*math.sin(beta1))
             road1_r = (x1 + TRACK_WIDTH*math.cos(beta1), y1 + TRACK_WIDTH*math.sin(beta1))
+            road_m = (
+                x1 - TRACK_WIDTH/2 * math.cos(beta1 - math.pi/2),
+                y1 - TRACK_WIDTH/2 * math.sin(beta1 - math.pi/2)
+            )
             road2_l = (x2 - TRACK_WIDTH*math.cos(beta2), y2 - TRACK_WIDTH*math.sin(beta2))
             road2_r = (x2 + TRACK_WIDTH*math.cos(beta2), y2 + TRACK_WIDTH*math.sin(beta2))
-            vertices = [road1_l, road1_r, road2_r, road2_l]
+            vertices = [road1_l, road_m, road1_r, road2_r, road2_l]
             self.fd_tile.shape.vertices = vertices
             t = self.world.CreateStaticBody(fixtures=self.fd_tile)
             t.userData = t
@@ -384,7 +393,7 @@ class CarRacing(gym.Env, EzPickle):
             t.road_friction = 1.0
             t.fixtures[0].sensor = True
             self.road_poly.append(
-                ([road1_l, road1_r, road2_r, road2_l], t.color)
+                ([road1_l, road_m, road1_r, road2_r, road2_l], t.color)
             )
             self.road.append(t)
             if border[i]:
@@ -533,7 +542,6 @@ class CarRacing(gym.Env, EzPickle):
 
         self.camera_follow = original_follow
         self.camera_update()
-
         if self.num_player == 1:
             return self.obs[0], step_rewards[0], self.done[0], {}
 
@@ -616,7 +624,10 @@ class CarRacing(gym.Env, EzPickle):
 
         for poly, color in self.road_poly:
             path = [( self.world_scale * -v[0] + self.world_size[0]/2, self.world_scale * -v[1] + self.world_size[1]/2) for v in poly]
-            pygame.draw.polygon(screen, [255 * i for i in color], path)
+            if color[0] > 0.4:
+                pygame.draw.polygon(screen, [255 * i for i in color], path)
+            else:
+                pygame.draw.polygon(screen, TILE_COLOR, path)
         return screen
 
     def render_road_for_observation_map(self):
@@ -641,7 +652,10 @@ class CarRacing(gym.Env, EzPickle):
             path = [
                 (self.obs_scale * -v[0] + self.world_size[0] / 2, self.obs_scale * -v[1] + self.world_size[1] / 2)
                 for v in poly]
-            pygame.draw.polygon(screen, [255 * i for i in color], path)
+            if color[0] > 0.4:
+                pygame.draw.polygon(screen, [255 * i for i in color], path)
+            else:
+                pygame.draw.polygon(screen, TILE_COLOR, path)
         return screen
 
     def render_cars_for_world_map(self, screen):
@@ -673,7 +687,7 @@ class CarRacing(gym.Env, EzPickle):
         camera_view = surface.subsurface(rect)
         camera_view.convert_alpha()
         camera_view = pygame.transform.rotate(camera_view, 57.295779513 * angle)
-        center = camera_view.get_rect ().center
+        center = camera_view.get_rect().center
         screen.blit(camera_view, (-center[0] + width/2, -center[1] + height/2))
 
     def camera_update(self, mode="human"):
