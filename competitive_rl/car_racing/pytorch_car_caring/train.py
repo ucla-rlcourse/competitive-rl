@@ -85,6 +85,7 @@ class Env():
     def __init__(self):
         self.env = gym.make('cCarRacing-v0', verbose=0)
         self.env.seed(args.seed)
+        self.env._max_episode_steps = 1000
         self.reward_threshold = self.env.spec.reward_threshold
 
     def reset(self):
@@ -219,8 +220,11 @@ class Agent():
         a_logp = a_logp.item()
         return action, a_logp
 
-    def save_param(self):
-        torch.save(self.net.state_dict(), 'param/training_result.pkl')
+    def load_param(self, name=None):
+        self.net.load_state_dict(torch.load(name))
+
+    def save_param(self, name=None):
+        torch.save(self.net.state_dict(), name)
 
     def store(self, transition):
         self.buffer[self.counter] = transition
@@ -267,12 +271,16 @@ class Agent():
 
 
 if __name__ == "__main__":
+    loadparam_name = "param/lr_1e-5_gen1.pkl"
+    saveparam_name = "param/lr_1e-5_gen1_train.pkl"
     agent = Agent()
+    agent.load_param(name=loadparam_name)
     env = Env()
     if args.vis:
         draw_reward = DrawLine(env="car", title="PPO", xlabel="Episode", ylabel="Moving averaged episode reward")
 
     training_records = []
+    score_interval_avg = []
     running_score = 0
     state = env.reset()
     for i_ep in range(5000):
@@ -291,13 +299,15 @@ if __name__ == "__main__":
             state = state_
             if done or die:
                 break
+        score_interval_avg.append(score)
         running_score = running_score * 0.99 + score * 0.01
 
         if i_ep % args.log_interval == 0:
             if args.vis:
-                draw_reward(xdata=i_ep, ydata=running_score)
+                draw_reward(xdata=i_ep, ydata=np.mean(score_interval_avg))
             print('Ep {}\tLast score: {:.2f}\tMoving average score: {:.2f}'.format(i_ep, score, running_score))
-            agent.save_param()
-        if running_score > env.reward_threshold:
-            print("Solved! Running reward is now {} and the last episode runs to {}!".format(running_score, score))
-            break
+            agent.save_param(name=saveparam_name)
+            score_interval_avg = []
+        # if running_score > env.reward_threshold:
+        #     print("Solved! Running reward is now {} and the last episode runs to {}!".format(running_score, score))
+        #     break
