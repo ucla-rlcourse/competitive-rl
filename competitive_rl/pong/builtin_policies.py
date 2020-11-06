@@ -24,7 +24,7 @@ import gym
 import numpy as np
 
 from competitive_rl.pong.base_pong_env import CHEAT_CODES
-from competitive_rl.pong.utils.policy_serving import Policy
+from competitive_rl.utils.policy_serving import Policy
 
 BUILTIN_AGENT_NAMES = [
     "RANDOM",
