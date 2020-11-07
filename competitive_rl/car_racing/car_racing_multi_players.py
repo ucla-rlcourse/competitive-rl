@@ -418,13 +418,14 @@ class CarRacing(gym.Env, EzPickle):
         self.camera_angle = initial_camera_angle
 
         # Reset rewards related
-        print("*" * 50)
-        print(f"Reset with {self.step_count}steps")
-        print(f"Score: {self.rewards}")
-        if self.tile_visited_count:
-            print(f"Tile visited: {self.tile_visited_count[0]}")
-        print("*" * 50)
-        print()
+        if self.verbose == 1:
+            print("*" * 50)
+            print(f"Reset with {self.step_count}steps")
+            print(f"Score: {self.rewards}")
+            if self.tile_visited_count:
+                print(f"Tile visited: {self.tile_visited_count[0]}")
+            print("*" * 50)
+            print()
         self.rewards = [0] * self.num_player
         self.prev_rewards = [0] * self.num_player
         self.tile_visited_count = [0] * self.num_player
@@ -522,18 +523,19 @@ class CarRacing(gym.Env, EzPickle):
         # Centralize the logic of rendering observation state into the step function
         original_follow = self.camera_follow
         for i in range(self.num_player):
-            self.camera_follow = i
-            self.camera_update("rgb_array")
-            self.render(self.observation_playground, self.observation_screens[i], mode="rgb_array",
-                        drawing_for_player_num=i)
-            self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
-            self.obs[i] = np.rot90(self.obs[i], 3)
-
-            # Grayscale converting
-            self.obs[i] = np.dot(self.obs[i][..., :3], [0.299, 0.587, 0.114])
-            # # Cropping
-            self.obs[i] = self.obs[i][15:70, 20:75]
-            self.obs[i] = np.reshape(self.obs[i], (55, 55, 1))
+            self.obs[i] = self.get_observation(i)
+            # self.camera_follow = i
+            # self.camera_update("rgb_array")
+            # self.render(self.observation_playground, self.observation_screens[i], mode="rgb_array",
+            #             drawing_for_player_num=i)
+            # self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
+            # self.obs[i] = np.rot90(self.obs[i], 3)
+            #
+            # # Grayscale converting
+            # self.obs[i] = np.dot(self.obs[i][..., :3], [0.299, 0.587, 0.114])
+            # # # Cropping
+            # self.obs[i] = self.obs[i][15:70, 20:75]
+            # self.obs[i] = np.reshape(self.obs[i], (55, 55, 1))
 
         self.camera_follow = original_follow
         self.camera_update()
@@ -542,6 +544,23 @@ class CarRacing(gym.Env, EzPickle):
             return self.obs[0], step_rewards[0], self.done[0], {}
 
         return self.obs, step_rewards, self.done, {}
+
+    def get_observation(self, agent_index):
+        i = agent_index
+        self.camera_follow = i
+        self.camera_update("rgb_array")
+        self.render(playground=self.observation_playground, playground_surface=self.observation_screens[i],
+                    mode="internal_rgb_array", drawing_for_player_num=i)
+        obs = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
+        obs = np.rot90(obs, 3)
+
+        # Grayscale converting
+        obs = np.dot(obs[..., :3], [0.299, 0.587, 0.114])
+
+        # Cropping
+        obs = obs[15:70, 20:75]
+        obs = np.reshape(obs, (55, 55, 1))
+        return obs
 
     def close(self):
         if self.viewer is not None:
@@ -722,8 +741,10 @@ class CarRacing(gym.Env, EzPickle):
             if input_number == -3:
                 self.isopen = False
 
-    def render(self, playground=None, playground_surface=None, mode="human", drawing_for_player_num=None):
-        if mode == "human":
+    def render(self, mode="human", playground=None, playground_surface=None, drawing_for_player_num=None,
+               agent_index=0):
+        assert self.camera_offset is not None, "You should reset the environment before rendering!"
+        if mode in ["human", "rgb_array"]:
             self.camera_update()
             playground = self.playground
             playground_surface = self.playground_surface
@@ -736,13 +757,21 @@ class CarRacing(gym.Env, EzPickle):
             self.screen.blit(playground_surface, (0, 0))
             pygame.display.flip()
 
-        if mode == "rgb_array":
+            if mode == "rgb_array":
+                obs = pygame.surfarray.array3d(self.screen)[::-1]
+                obs = np.rot90(obs, 3)
+                return obs
+
+        elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")
             for i in range(self.num_player):
                 self.cars[i].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset,
                                              angle=self.camera_angle,
                                              scale=self.camera_scale, main_car_color=(drawing_for_player_num == i))
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
+
+        else:
+            raise ValueError("Unknown rendering mode: {}".format(mode))
 
     def show_all_obs(self, obs, grayscale=False):
         for i in range(self.num_player):

@@ -9,6 +9,7 @@ def register_competitive_envs():
         register(
             id="cCarRacing-v0",
             entry_point=CarRacing,
+            kwargs=dict(verbose=0),
             max_episode_steps=1000,
             reward_threshold=900
         )
