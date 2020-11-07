@@ -47,6 +47,9 @@ from gym.utils import seeding, EzPickle
 from competitive_rl.car_racing.car_dynamics import Car
 from competitive_rl.car_racing.pygame_rendering import vertical_ind, horiz_ind, draw_text
 
+pygame.init()
+pygame.font.init()
+
 STATE_W = 96  # less than Atari 160x192
 STATE_H = 96
 VIDEO_W = 600
@@ -141,8 +144,6 @@ class CarRacing(gym.Env, EzPickle):
     }
 
     def __init__(self, num_player=1, verbose=1, seed=8367813160709901366):
-        pygame.init()
-        pygame.font.init()
         EzPickle.__init__(self)
         self.seed(seed=seed)
         self.contactListener_keepref = FrictionDetector(self)
@@ -151,6 +152,8 @@ class CarRacing(gym.Env, EzPickle):
             contactListener=self.contactListener_keepref
         )
         self.viewer = None
+        pygame.init()
+        pygame.font.init()
         self.screen = pygame.display.set_mode(window_size)
         self.playground_surface = pygame.display.set_mode(window_size)
         self.invisible_state_window = None
