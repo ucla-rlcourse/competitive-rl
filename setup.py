@@ -13,3 +13,5 @@ setup(
         "box2d-py~=2.3.5"  # Identical to gym[box2d]
     ]
 )
+
+print("You have successfully installed competitive_rl 0.1.0!")
