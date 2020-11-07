@@ -14,7 +14,7 @@ def register_car_racing():
             max_episode_steps=1000,
             reward_threshold=900
         )
-        print("Register car_racing_multiple_players environments.")
+        print("Register cCarRacing-v0 environments.")
     except gym.error.Error:
         pass
 
