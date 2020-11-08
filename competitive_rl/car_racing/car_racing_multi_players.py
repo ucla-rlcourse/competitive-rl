@@ -531,18 +531,6 @@ class CarRacing(gym.Env, EzPickle):
         original_follow = self.camera_follow
         for i in range(self.num_player):
             self.obs[i] = self.get_observation(i)
-            # self.camera_follow = i
-            # self.camera_update("rgb_array")
-            # self.render(self.observation_playground, self.observation_screens[i], mode="rgb_array",
-            #             drawing_for_player_num=i)
-            # self.obs[i] = pygame.surfarray.array3d(self.observation_screens[i])[::-1]
-            # self.obs[i] = np.rot90(self.obs[i], 3)
-            #
-            # # Grayscale converting
-            # self.obs[i] = np.dot(self.obs[i][..., :3], [0.299, 0.587, 0.114])
-            # # # Cropping
-            # self.obs[i] = self.obs[i][15:70, 20:75]
-            # self.obs[i] = np.reshape(self.obs[i], (55, 55, 1))
 
         self.camera_follow = original_follow
         self.camera_update()
@@ -565,7 +553,9 @@ class CarRacing(gym.Env, EzPickle):
         obs = np.rot90(obs, 3)
 
         # Grayscale converting
-        obs = np.dot(obs[..., :3], [0.299, 0.587, 0.114])
+        obs = obs[..., 0] * 0.299 + obs[..., 1] * 0.587 + obs[..., 2] * 0.114
+        # obs = np.dot(obs[..., :3], [0.299, 0.587, 0.114])
+        # np.testing.assert_almost_equal(obs, new_obs)
 
         # Cropping
         # obs = obs[15:70, 20:75]
@@ -728,7 +718,7 @@ class CarRacing(gym.Env, EzPickle):
         if (self.camera_follow != -1):
             angle = self.cars[self.camera_follow].hull.angle
             vel = self.cars[self.camera_follow].hull.linearVelocity
-            if np.linalg.norm(vel) > 0.5:
+            if vel[0] ** 2 + vel[1] ** 2 > 0.5 ** 2:
                 angle = math.atan2(-vel[0], +vel[1])
 
             tmp = Box2D.b2Transform()

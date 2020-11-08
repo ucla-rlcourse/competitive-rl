@@ -122,6 +122,9 @@ class Car:
             w.userData = w
             self.wheels.append(w)
         self.drawlist = self.wheels + [self.hull]
+        self.drawlist_colors = {
+            item: tuple([255 * c for c in item.color]) for item in self.drawlist
+        }
         self.particles = []
 
     def gas(self, gas):
@@ -286,7 +289,7 @@ class Car:
                     else:
                         pygame.draw.polygon(screen, color, path)
                 else:
-                    pygame.draw.polygon(screen, [255 * i for i in obj.color], path)
+                    pygame.draw.polygon(screen, self.drawlist_colors[obj], path)
                 # #object_to_draw.append(([255 * i for i in obj.color], path))
                 # if "phase" not in obj.__dict__: continue
                 # a1 = obj.phase
@@ -319,7 +322,7 @@ class Car:
                 '''if "phase" not in obj.__dict__:
                     pygame.draw.polygon(surface, color, path)
                 else:'''
-                pygame.draw.polygon(surface, [255 * i for i in obj.color], path)
+                pygame.draw.polygon(surface, self.drawlist_colors[obj], path)
                 # object_to_draw.append(([255 * i for i in obj.color], path))
                 if "phase" not in obj.__dict__: continue
                 a1 = obj.phase
