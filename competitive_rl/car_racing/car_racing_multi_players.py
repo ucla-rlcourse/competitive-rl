@@ -52,10 +52,10 @@ pygame.font.init()
 
 STATE_W = 96  # less than Atari 160x192
 STATE_H = 96
-VIDEO_W = 600
-VIDEO_H = 400
-WINDOW_W = 1000
-WINDOW_H = 800
+# VIDEO_W = 600
+# VIDEO_H = 400
+# WINDOW_W = 1000
+# WINDOW_H = 800
 SCALE = 6.0  # Track scale
 TRACK_RAD = 900 / SCALE  # Track is heavily morphed circle with this radius
 PLAYFIELD = 2000 / SCALE  # Game over boundary
@@ -71,7 +71,7 @@ BORDER_MIN_COUNT = 4
 
 ROAD_COLOR = [0.4, 0.4, 0.4]
 
-window_size = width, height = 1000, 800
+WINDOW_SIZE = width, height = 1000, 800
 white = 255, 255, 255
 initial_camera_scale = 1
 tmp = Box2D.b2Transform()
@@ -143,7 +143,7 @@ class CarRacing(gym.Env, EzPickle):
         'video.frames_per_second': FPS
     }
 
-    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366):
+    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE):
         EzPickle.__init__(self)
         self.seed(seed=seed)
         self.contactListener_keepref = FrictionDetector(self)
@@ -154,6 +154,7 @@ class CarRacing(gym.Env, EzPickle):
         self.viewer = None
         pygame.init()
         pygame.font.init()
+        self.window_size = window_size
         self.screen = pygame.display.set_mode(window_size)
         self.playground_surface = pygame.display.set_mode(window_size)
         self.invisible_state_window = None
@@ -187,7 +188,7 @@ class CarRacing(gym.Env, EzPickle):
         self.world_map = None
         self.world_scale = 10
         self.obs_scale = (self.world_scale / (100 / math.sqrt(96))) * 1.8
-        self.world_size = world_width, world_height = 10000, 10000
+        self.world_size = 10000, 10000
 
         self.obs = {}
         self.info = None
@@ -570,6 +571,8 @@ class CarRacing(gym.Env, EzPickle):
         if self.viewer is not None:
             self.viewer.close()
             self.viewer = None
+        pygame.display.quit()
+        pygame.quit()
 
     def render_indicators_for_pygame(self, screen, width=width, height=height, scale=30):
         if self.camera_follow < 0:
@@ -595,7 +598,7 @@ class CarRacing(gym.Env, EzPickle):
                   (0, 255, 0))
         horiz_ind(screen, 30 * s, height - 2 * h, s, 2 * h, 0.8 * self.cars[self.camera_follow].hull.angularVelocity,
                   (255, 0, 0))
-        draw_text(screen, str("%08i" % self.rewards[self.camera_follow]), width / 100, height - height / 20, scale)
+        draw_text(screen, str("%05.0f" % self.rewards[self.camera_follow]), width / 100, height - height / 20, scale)
 
     def render_road_for_pygame(self, screen, width=width, height=height):
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
@@ -695,15 +698,18 @@ class CarRacing(gym.Env, EzPickle):
         angle = self.camera_angle
 
         if mode == "human":
-            width, height = window_size
+            width, height = self.window_size
             pos = (
                 self.world_scale * -pos[0] + self.world_size[0] / 2,
                 self.world_scale * -pos[1] + self.world_size[1] / 2)
-        if mode == "rgb_array":
+        elif mode == "rgb_array":
             width = STATE_W
             height = STATE_H
             pos = (
                 self.obs_scale * -pos[0] + self.world_size[0] / 2, self.obs_scale * -pos[1] + self.world_size[1] / 2)
+
+        else:
+            raise ValueError("Wrong mode {} in camera_view".format(mode))
 
         rect = pygame.Rect(pos[0] - width, pos[1] - height, 2 * width, 2 * height)
 
@@ -759,12 +765,13 @@ class CarRacing(gym.Env, EzPickle):
                                     scale=self.camera_scale, mode="human")
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
             self.screen.blit(playground_surface, (0, 0))
-            pygame.display.flip()
 
             if mode == "rgb_array":
                 obs = pygame.surfarray.array3d(self.screen)[::-1]
                 obs = np.rot90(obs, 3)
                 return obs
+            else:
+                pygame.display.flip()
 
         elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")
