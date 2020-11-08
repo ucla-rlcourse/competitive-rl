@@ -33,13 +33,15 @@ class WrapPyTorch(gym.ObservationWrapper):
         return frame.transpose(2, 0, 1)
 
 
-def make_env_a2c_atari(env_id, seed, rank, log_dir, resized_dim=84):
+def make_env_a2c_atari(env_id, seed, rank, log_dir, resized_dim=84, frame_stack=None):
     def _thunk():
         env = make_atari(env_id)
         env.seed(seed + rank)
         # if log_dir is not None:
         #     env = Monitor(env, os.path.join(log_dir, str(rank)))
         env = wrap_deepmind(env, resized_dim)
+        if frame_stack is not None:
+            env = FrameStack(env, frame_stack)
         env = WrapPyTorch(env)
         return env
 
@@ -232,7 +234,7 @@ class FrameStack(gym.Wrapper):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(shp[0] * n_frames, shp[1], shp[2]),
+            shape=(shp[0], shp[1], shp[2] * n_frames),
             dtype=env.observation_space.dtype
         )
 
@@ -249,7 +251,7 @@ class FrameStack(gym.Wrapper):
 
     def _get_ob(self):
         assert len(self.frames) == self.n_frames
-        return np.stack(self.frames).swapaxes(0, 1)
+        return np.stack(self.frames, axis=2).squeeze(-1)
 
 
 def make_atari(env_id):

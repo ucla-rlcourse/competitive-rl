@@ -2,7 +2,7 @@ import gym
 from gym.envs.registration import register
 
 from competitive_rl.car_racing.car_racing_multi_players import CarRacing
-from competitive_rl.utils.atari_wrappers import WrapPyTorch
+from competitive_rl.utils.atari_wrappers import WrapPyTorch, FrameStack
 
 
 def register_car_racing():
@@ -19,10 +19,14 @@ def register_car_racing():
         pass
 
 
-def make_car_racing(env_id, seed, rank):
+def make_car_racing(env_id, seed, rank, frame_stack=None):
+    assert "CarRacing" in env_id
+
     def _thunk():
         env = gym.make(env_id)
         env.seed(seed + rank)
+        if frame_stack is not None:
+            env = FrameStack(env, frame_stack)
         env = WrapPyTorch(env)
         return env
 

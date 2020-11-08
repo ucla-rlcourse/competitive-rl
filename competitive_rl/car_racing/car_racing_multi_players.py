@@ -206,7 +206,7 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(55, 55, 1),
+            shape=(STATE_W, STATE_H, 1),
             dtype=np.uint8
         )
 
@@ -563,8 +563,8 @@ class CarRacing(gym.Env, EzPickle):
         obs = np.dot(obs[..., :3], [0.299, 0.587, 0.114])
 
         # Cropping
-        obs = obs[15:70, 20:75]
-        obs = np.reshape(obs, (55, 55, 1))
+        # obs = obs[15:70, 20:75]
+        obs = np.reshape(obs, self.observation_space.shape)
         return obs
 
     def close(self):
