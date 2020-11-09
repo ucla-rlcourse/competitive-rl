@@ -5,7 +5,7 @@ if __name__ == '__main__':
     obs = envs.reset()
     for _ in range(10000):
         _, _, d, _ = envs.step(envs.action_space.sample())
-        # envs.render("human")
+        envs.render("human")
         if d:
             envs.reset()
     print("Return obs shape: ", obs.shape)

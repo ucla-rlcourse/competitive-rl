@@ -155,8 +155,11 @@ class CarRacing(gym.Env, EzPickle):
         pygame.init()
         pygame.font.init()
         self.window_size = window_size
-        self.screen = pygame.display.set_mode(window_size)
-        self.playground_surface = pygame.display.set_mode(window_size)
+        self.screen = pygame.Surface(window_size)
+        self.playground_surface = pygame.Surface(window_size)
+        self._viewer = None
+        # self.screen = pygame.display.set_mode(window_size)
+        # self.playground_surface = pygame.display.set_mode(window_size)
         self.invisible_state_window = None
         self.invisible_video_window = None
         self.road = None
@@ -709,7 +712,7 @@ class CarRacing(gym.Env, EzPickle):
         rect = pygame.Rect(pos[0] - width, pos[1] - height, 2 * width, 2 * height)
 
         camera_view = surface.subsurface(rect)
-        camera_view.convert_alpha()
+        # camera_view.convert_alpha()
         camera_view = pygame.transform.rotate(camera_view, 57.295779513 * angle)
         center = camera_view.get_rect().center
         screen.blit(camera_view, (-center[0] + width / 2, -center[1] + height / 2))
@@ -761,12 +764,15 @@ class CarRacing(gym.Env, EzPickle):
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
             self.screen.blit(playground_surface, (0, 0))
 
+            obs = pygame.surfarray.array3d(self.screen)[::-1]
+            obs = np.rot90(obs, 3)
             if mode == "rgb_array":
-                obs = pygame.surfarray.array3d(self.screen)[::-1]
-                obs = np.rot90(obs, 3)
                 return obs
             else:
-                pygame.display.flip()
+                from gym.envs.classic_control import rendering
+                if self._viewer is None:
+                    self._viewer = rendering.SimpleImageViewer()
+                self._viewer.imshow(obs)
 
         elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")
