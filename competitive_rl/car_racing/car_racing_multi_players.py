@@ -187,7 +187,7 @@ class CarRacing(gym.Env, EzPickle):
         self.world_map = None
         self.world_scale = 10
         self.obs_scale = (self.world_scale / (100 / math.sqrt(96))) * 1.8
-        self.world_size = world_width, world_height = 10000, 10000
+        self.world_size = world_width, world_height = 7000, 7000
         self.obs_size = (self.world_size[0] / (100 / math.sqrt(96))) * 1.8,(self.world_size[1] / (100 / math.sqrt(96))) * 1.8
         self.obs = {}
         self.info = None
