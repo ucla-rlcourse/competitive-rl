@@ -499,6 +499,7 @@ class CarRacing(gym.Env, EzPickle):
         #         if event.type == pygame.QUIT:
         # pygame.quit()
         # quit()
+
         if action is not None:
             if self.num_player > 1:
                 for i in range(len(self.cars)):
@@ -510,9 +511,11 @@ class CarRacing(gym.Env, EzPickle):
                 self.cars[0].gas(action[1])
                 self.cars[0].brake(action[2])
 
-        for car in self.cars:
-            car.step(1.0 / FPS)
-        self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
+        for _ in range(8):  # Action repetition
+            for car in self.cars:
+                car.step(1.0 / FPS)
+            self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
+
         self.t += 1.0 / FPS
         self.ontrack_count += 1
         self.step_count += 1
