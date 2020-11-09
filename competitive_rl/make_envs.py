@@ -81,7 +81,7 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronou
     """
     asynchronous = asynchronous and num_envs > 1
 
-    env_id = _verify_env_id(env_id)
+    # env_id = _verify_env_id(env_id)
 
     if env_id == "CartPole-v0":
         print("Setup easy environment CartPole-v0 for testing.")
