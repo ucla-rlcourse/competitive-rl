@@ -478,7 +478,8 @@ class CarRacing(gym.Env, EzPickle):
     def step(self, action):
         if action is not None:
             action = np.clip(action, -1, 1)
-        if pygame.display.list_modes() != -1:  # If not in remote server
+        # If not in remote server
+        if pygame.display.get_init() and pygame.display.list_modes() != -1:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
