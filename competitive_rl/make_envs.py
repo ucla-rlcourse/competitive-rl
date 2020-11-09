@@ -63,7 +63,6 @@ def _verify_env_id(env_id):
     ]
     return env_id
 
-
 def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronous=False, resized_dim=42, frame_stack=4):
     """
     Create CUHKPong-v0, CUHKPongDouble-v0 or CartPole-v0 environments. If
