@@ -63,6 +63,7 @@ def _verify_env_id(env_id):
     ]
     return env_id
 
+
 def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronous=False, resized_dim=42, frame_stack=4):
     """
     Create CUHKPong-v0, CUHKPongDouble-v0 or CartPole-v0 environments. If
@@ -98,8 +99,10 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronou
 
     if env_id == "cCarRacing-v0":
         envs = [make_car_racing(env_id, seed, i, frame_stack=frame_stack) for i in range(num_envs)]
-    else:
+    elif env_id == "cPong-v0":
         envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim, frame_stack) for i in range(num_envs)]
+    else:
+        envs = [lambda: gym.make(env_id) for i in range(num_envs)]
 
     if asynchronous:
         envs = SubprocVecEnv(envs)
