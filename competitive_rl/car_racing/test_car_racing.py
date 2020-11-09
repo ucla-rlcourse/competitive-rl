@@ -15,4 +15,9 @@ if __name__ == '__main__':
     # print("Return obs shape: ", obs.shape)
     e = gym.make("cCarRacing-v0")
     e.reset()
+    for _ in range(10000):
+        _, _, d, _ = e.step(e.action_space.sample())
+        e.render("human")
+        if d:
+            e.reset()
     e.close()

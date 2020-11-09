@@ -155,8 +155,12 @@ class CarRacing(gym.Env, EzPickle):
         pygame.init()
         pygame.font.init()
         self.window_size = window_size
-        self.screen = pygame.Surface(window_size)
-        self.playground_surface = pygame.Surface(window_size)
+
+        # For rendering purpose. Lazy initialize.
+        self.screen = None
+        self.playground_surface = None
+        self.playground = None
+
         self._viewer = None
         # self.screen = pygame.display.set_mode(window_size)
         # self.playground_surface = pygame.display.set_mode(window_size)
@@ -188,7 +192,7 @@ class CarRacing(gym.Env, EzPickle):
 
         self.isopen = True
 
-        self.world_map = None
+        # self.world_map = None
         self.world_scale = 10
         self.obs_scale = (self.world_scale / (100 / math.sqrt(96))) * 1.8
         self.world_size = 10000, 10000
@@ -196,9 +200,9 @@ class CarRacing(gym.Env, EzPickle):
         self.obs = {}
         self.info = None
 
-        self.playground = None
-        self.observation_playground = None
-        self.observation_screens = None
+        self.observation_playground = pygame.Surface(self.world_size)
+        self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
+        # self.world_map = pygame.Surface(self.world_size)
 
         self.fonts = {
             5: pygame.font.SysFont('Comic Sans MS', 5),
@@ -453,9 +457,9 @@ class CarRacing(gym.Env, EzPickle):
         )
 
         # Reset rendering related
-        self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
-        self.world_map = pygame.Surface(self.world_size)
-        self.playground = pygame.Surface(self.world_size)
+        # self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
+        # self.world_map = pygame.Surface(self.world_size)
+        # self.playground = pygame.Surface(self.world_size)
         if use_local_track != "":
             self._create_track(use_local_track=use_local_track, record_track_to=record_track_to)
         else:
@@ -471,8 +475,14 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             # print(*self.track[0][1:4])
             self.cars.append(Car(self.world, *self.track[0][1:4], i))
-        self.playground = self.render_road_for_world_map()
-        self.observation_playground = self.render_road_for_observation_map()
+
+
+        # Draw the background for rendering
+        if self.playground is not None:
+            self.render_road_for_world_map(self.playground)
+
+        # Draw the background for observation
+        self.observation_playground = self.render_road_for_observation_map(self.observation_playground)
 
         self.info = ["" for x in range(self.num_player)]
 
@@ -642,8 +652,8 @@ class CarRacing(gym.Env, EzPickle):
             if to_print:
                 pygame.draw.polygon(screen, [255 * i for i in color], path)
 
-    def render_road_for_world_map(self):
-        screen = pygame.Surface(self.world_size)
+    def render_road_for_world_map(self, screen):
+        # screen = pygame.Surface(self.world_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         k = PLAYFIELD / 20.0
         square_to_draw = []
@@ -667,8 +677,8 @@ class CarRacing(gym.Env, EzPickle):
             pygame.draw.polygon(screen, [255 * i for i in color], path)
         return screen
 
-    def render_road_for_observation_map(self):
-        screen = pygame.Surface(self.world_size)
+    def render_road_for_observation_map(self, screen):
+        # screen = pygame.Surface(self.world_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         k = PLAYFIELD / 20.0
         square_to_draw = []
@@ -763,13 +773,22 @@ class CarRacing(gym.Env, EzPickle):
         assert self.camera_offset is not None, "You should reset the environment before rendering!"
         if mode in ["human", "rgb_array"]:
             self.camera_update()
+
+            if self.playground_surface is None:
+                self.playground = pygame.Surface(self.world_size)
+                self.render_road_for_world_map(self.playground)  # Makeup the first background image.
+                self.screen = pygame.Surface(self.window_size)
+                self.playground_surface = pygame.Surface(self.window_size)
+
             playground = self.playground
             playground_surface = self.playground_surface
+
             self.camera_view(playground, playground_surface)
             for car in self.cars:
                 car.draw_for_pygame(playground_surface, width, height, offset=self.camera_offset,
                                     angle=self.camera_angle,
                                     scale=self.camera_scale, mode="human")
+
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
             self.screen.blit(playground_surface, (0, 0))
 
