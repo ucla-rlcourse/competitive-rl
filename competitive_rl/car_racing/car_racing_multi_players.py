@@ -558,7 +558,7 @@ class CarRacing(gym.Env, EzPickle):
         self.camera_update()
 
         # Reward clipping
-        step_rewards = np.clip(step_rewards, -1, 1)
+        # step_rewards = np.clip(step_rewards, -1, 1)
 
         if self.num_player == 1:
             return self.obs[0], step_rewards[0], self.done[0], {}
