@@ -200,6 +200,11 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_playground = None
         self.observation_screens = None
 
+        self.fonts = {
+            5: pygame.font.SysFont('Comic Sans MS', 5),
+            30: pygame.font.SysFont('Comic Sans MS', 30)
+        }
+
         self.fd_tile = None
 
         self.action_space = spaces.Box(np.array([-1, 0, 0]),
@@ -482,8 +487,8 @@ class CarRacing(gym.Env, EzPickle):
         # if pygame.display.get_init() and pygame.display.list_modes() != -1:
         #     for event in pygame.event.get():
         #         if event.type == pygame.QUIT:
-                    # pygame.quit()
-                    # quit()
+        # pygame.quit()
+        # quit()
         if action is not None:
             if self.num_player > 1:
                 for i in range(len(self.cars)):
@@ -570,6 +575,8 @@ class CarRacing(gym.Env, EzPickle):
         if self.viewer is not None:
             self.viewer.close()
             self.viewer = None
+        self.fonts.clear()
+        del self.fonts
         pygame.display.quit()
         pygame.quit()
 
@@ -597,7 +604,8 @@ class CarRacing(gym.Env, EzPickle):
                   (0, 255, 0))
         horiz_ind(screen, 30 * s, height - 2 * h, s, 2 * h, 0.8 * self.cars[self.camera_follow].hull.angularVelocity,
                   (255, 0, 0))
-        draw_text(screen, str("%05.0f" % self.rewards[self.camera_follow]), width / 100, height - height / 20, scale)
+        draw_text(screen, str("%05.0f" % self.rewards[self.camera_follow]), width / 100, height - height / 20,
+                  self.fonts[scale])
 
     def render_road_for_pygame(self, screen, width=width, height=height):
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
