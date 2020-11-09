@@ -188,12 +188,12 @@ class CarRacing(gym.Env, EzPickle):
         self.world_scale = 10
         self.obs_scale = (self.world_scale / (100 / math.sqrt(96))) * 1.8
         self.world_size = world_width, world_height = 10000, 10000
-
+        self.obs_size = (self.world_size[0] / (100 / math.sqrt(96))) * 1.8,(self.world_size[1] / (100 / math.sqrt(96))) * 1.8
         self.obs = {}
         self.info = None
 
-        self.playground = None
-        self.observation_playground = None
+        self.playground = pygame.Surface(self.world_size)
+        self.observation_playground = pygame.Surface(self.obs_size)
         self.observation_screens = None
 
         self.fd_tile = None
@@ -205,7 +205,7 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(55, 55, 1),
+            shape=(STATE_W, STATE_H, 1),
             dtype=np.uint8
         )
 
@@ -445,8 +445,8 @@ class CarRacing(gym.Env, EzPickle):
 
         # Reset rendering related
         self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
-        self.world_map = pygame.Surface(self.world_size)
-        self.playground = pygame.Surface(self.world_size)
+        #self.world_map = pygame.Surface(self.world_size)
+        #self.playground = pygame.Surface(self.world_size)
         if use_local_track != "":
             self._create_track(use_local_track=use_local_track, record_track_to=record_track_to)
         else:
@@ -462,8 +462,8 @@ class CarRacing(gym.Env, EzPickle):
         for i in range(self.num_player):
             # print(*self.track[0][1:4])
             self.cars.append(Car(self.world, *self.track[0][1:4], i))
-        self.playground = self.render_road_for_world_map()
-        self.observation_playground = self.render_road_for_observation_map()
+        self.playground = self.render_road_for_world_map(self.playground)
+        self.observation_playground = self.render_road_for_observation_map(self.observation_playground)
 
         self.info = ["" for x in range(self.num_player)]
 
@@ -562,8 +562,8 @@ class CarRacing(gym.Env, EzPickle):
         obs = np.dot(obs[..., :3], [0.299, 0.587, 0.114])
 
         # Cropping
-        obs = obs[15:70, 20:75]
-        obs = np.reshape(obs, (55, 55, 1))
+        #obs = obs[15:70, 20:75]
+        obs = np.reshape(obs, (STATE_W, STATE_H, 1))
         return obs
 
     def close(self):
@@ -632,8 +632,8 @@ class CarRacing(gym.Env, EzPickle):
             if to_print:
                 pygame.draw.polygon(screen, [255 * i for i in color], path)
 
-    def render_road_for_world_map(self):
-        screen = pygame.Surface(self.world_size)
+    def render_road_for_world_map(self, screen):
+        #screen = pygame.Surface(self.world_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         k = PLAYFIELD / 20.0
         square_to_draw = []
@@ -657,8 +657,8 @@ class CarRacing(gym.Env, EzPickle):
             pygame.draw.polygon(screen, [255 * i for i in color], path)
         return screen
 
-    def render_road_for_observation_map(self):
-        screen = pygame.Surface(self.world_size)
+    def render_road_for_observation_map(self,screen):
+        #screen = pygame.Surface(self.obs_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         k = PLAYFIELD / 20.0
         square_to_draw = []
@@ -671,13 +671,13 @@ class CarRacing(gym.Env, EzPickle):
 
         for square in square_to_draw:
             path = [
-                (self.obs_scale * -v[0] + self.world_size[0] / 2, self.obs_scale * -v[1] + self.world_size[1] / 2)
+                (self.obs_scale * -v[0] + self.obs_size[0] / 2, self.obs_scale * -v[1] + self.obs_size[1] / 2)
                 for v in square]
             pygame.draw.polygon(screen, (0.4 * 255, 0.9 * 255, 0.4 * 255), path)
 
         for poly, color in self.road_poly:
             path = [
-                (self.obs_scale * -v[0] + self.world_size[0] / 2, self.obs_scale * -v[1] + self.world_size[1] / 2)
+                (self.obs_scale * -v[0] + self.obs_size[0] / 2, self.obs_scale * -v[1] + self.obs_size[1] / 2)
                 for v in poly]
             pygame.draw.polygon(screen, [255 * i for i in color], path)
         return screen
@@ -703,7 +703,7 @@ class CarRacing(gym.Env, EzPickle):
             width = STATE_W
             height = STATE_H
             pos = (
-                self.obs_scale * -pos[0] + self.world_size[0] / 2, self.obs_scale * -pos[1] + self.world_size[1] / 2)
+                self.obs_scale * -pos[0] + self.obs_size[0] / 2, self.obs_scale * -pos[1] + self.obs_size[1] / 2)
 
         rect = pygame.Rect(pos[0] - width, pos[1] - height, 2 * width, 2 * height)
 
@@ -769,7 +769,7 @@ class CarRacing(gym.Env, EzPickle):
         elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")
             for i in range(self.num_player):
-                self.cars[i].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset,
+                self.cars[i].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=(self.camera_offset),
                                              angle=self.camera_angle,
                                              scale=self.camera_scale, main_car_color=(drawing_for_player_num == i))
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
@@ -787,19 +787,20 @@ class CarRacing(gym.Env, EzPickle):
             plt.show()
         self.show_all_car_obs = False
 
-# if __name__ == "__main__":
-#     env = CarRacing(num_player=num_player)
-#     # example: env.reset(use_local_track="./track/test.json",record_track_to="")
-#     # example: env.reset(use_local_track="",record_track_to="./track")
-#     env.reset(use_local_track="",record_track_to="")
-#     a = [[0.0, 0.0, 0.0] for _ in range(num_player)]
-#     clock = pygame.time.Clock()
-#     while True:
-#         env.manage_input(key_phrase(a))
-#         env.render()
-#         observation, reward, done, info = env.step(a)
-#         if env.show_all_car_obs:
-#             env.show_all_obs(observation)
-#         clock.tick(60)
-#         fps = clock.get_fps()
-#         print(fps)
+if __name__ == "__main__":
+     env = CarRacing(num_player=2)
+    # example: env.reset(use_local_track="./track/test.json",record_track_to="")
+     # example: env.reset(use_local_track="",record_track_to="./track")
+     env.reset(use_local_track="",record_track_to="")
+     a = [[0.0, 1.0, 0.0] for _ in range(2)]
+     print(a)
+     clock = pygame.time.Clock()
+     while True:
+         #env.manage_input(key_phrase(a))
+         env.render()
+         observation, reward, done, info = env.step(a)
+         #if env.show_all_car_obs:
+         #env.show_all_obs(observation)
+         clock.tick(60)
+         fps = clock.get_fps()
+         print(fps)
