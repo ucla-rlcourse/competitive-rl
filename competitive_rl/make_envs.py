@@ -64,7 +64,8 @@ def _verify_env_id(env_id):
     return env_id
 
 
-def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronous=False, resized_dim=42, frame_stack=4):
+def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronous=False, resized_dim=42, frame_stack=4,
+              action_repeat=None):
     """
     Create CUHKPong-v0, CUHKPongDouble-v0 or CartPole-v0 environments. If
     num_envs > 1, put them into different processes.
@@ -98,7 +99,8 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronou
         os.makedirs(log_dir, exist_ok=True)
 
     if env_id == "cCarRacing-v0":
-        envs = [make_car_racing(env_id, seed, i, frame_stack=frame_stack) for i in range(num_envs)]
+        envs = [make_car_racing(env_id, seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
+                range(num_envs)]
     elif env_id == "cPong-v0":
         envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim, frame_stack) for i in range(num_envs)]
     else:

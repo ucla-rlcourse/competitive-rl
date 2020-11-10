@@ -8,7 +8,7 @@ register_competitive_envs()
 
 
 def make_competitive_car_racing(
-        opponent_policy, seed=0, num_envs=3, asynchronous=False, frame_stack=4
+        opponent_policy, seed=0, num_envs=3, asynchronous=False, frame_stack=4, action_repeat=None
 ):
     assert callable(opponent_policy)
     asynchronous = asynchronous and num_envs > 1
@@ -30,11 +30,11 @@ def make_competitive_car_racing(
             self.opponent_action = self.opponent_policy(o[1])
             return o[0]
 
-    def _make(env_id, seed, rank, frame_stack=None):
+    def _make(env_id, seed, rank, frame_stack=None, action_repeat=None):
         assert "CarRacing" in env_id
 
         def _thunk():
-            env = gym.make(env_id)
+            env = gym.make(env_id, action_repeat=action_repeat)
             env.seed(seed + rank)
             env = CarRacingWrapper(env)
             if frame_stack is not None:
