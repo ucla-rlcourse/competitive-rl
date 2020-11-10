@@ -53,5 +53,8 @@ def make_competitive_car_racing(
 
 
 if __name__ == '__main__':
-    e = make_competitive_car_racing(lambda o: [0, 1, 0])
+    e = make_competitive_car_racing(lambda o: [0, 0, 1], asynchronous=False)
     e.reset()
+    for _ in range(100):
+        e.envs[0].render("human")
+        e.step([[-0.5, 1, 0] for _ in range(3)])

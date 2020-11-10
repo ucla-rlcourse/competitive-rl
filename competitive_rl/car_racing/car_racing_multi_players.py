@@ -79,7 +79,7 @@ tmp.position = (0, 0)
 initial_camera_offset = tmp
 initial_camera_angle = 0
 car_scale = 15
-num_player = 1
+# num_player = 1
 
 DARK_COLOR = (0, 0, 51)
 MID_COLOR = (0, 40, 100)
@@ -135,8 +135,9 @@ class FrictionDetector(contactListener):
             obj.tiles.add(tile)
             if not tile.road_visited[car_number]:
                 tile.road_visited[car_number] = True
-                # self.env.rewards[car_number] += 1000.0/len(self.env.track)
-                self.env.rewards[car_number] += 10
+                self.env.rewards[car_number] += 1000.0 / len(self.env.track)
+                # print("Car {} finish tile {}. Info: {}".format(car_number, tile.position, (obj.position)))
+                # self.env.rewards[car_number] += 10
                 self.env.tile_visited_count[car_number] += 1
         else:
             obj.tiles.remove(tile)
@@ -148,7 +149,7 @@ class CarRacing(gym.Env, EzPickle):
         'video.frames_per_second': FPS
     }
 
-    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE, action_repeat=4):
+    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE, action_repeat=1):
         EzPickle.__init__(self)
         self.seed(seed=seed)
         self.contactListener_keepref = FrictionDetector(self)
@@ -173,8 +174,8 @@ class CarRacing(gym.Env, EzPickle):
         self.invisible_video_window = None
         self.road = None
         self.cars = {}
-        self.rewards = [0] * num_player
-        self.prev_rewards = [0] * num_player
+        self.rewards = {i: 0 for i in range(num_player)}
+        self.prev_rewards = {i: 0 for i in range(num_player)}
         self.verbose = verbose
         self.num_player = num_player
         self.track = None
@@ -217,7 +218,7 @@ class CarRacing(gym.Env, EzPickle):
 
         self.fd_tile = None
 
-        self.action_space = spaces.Box(np.array([-1, -1, -1]),  # We will rescale acceleration and brake.
+        self.action_space = spaces.Box(np.array([-1, 0, 0]),  # We will rescale acceleration and brake.
                                        np.array([+1, +1, +1]),
                                        dtype=np.float32)  # steer, gas, brake
         if num_player > 1:
@@ -456,9 +457,9 @@ class CarRacing(gym.Env, EzPickle):
                 print(f"Tile visited: {self.tile_visited_count[0]}")
             print("*" * 50)
             print()
-        self.rewards = [0] * self.num_player
-        self.prev_rewards = [0] * self.num_player
-        self.tile_visited_count = [0] * self.num_player
+        self.rewards = {i: 0 for i in range(self.num_player)}
+        self.prev_rewards = {i: 0 for i in range(self.num_player)}
+        self.tile_visited_count = {i: 0 for i in range(self.num_player)}
         self.outbound_count = 0
         self.idle_count = 0
         self.step_count = 0
@@ -486,9 +487,9 @@ class CarRacing(gym.Env, EzPickle):
                         "retry to generate track (normal if there are not many"
                         "instances of this message)"
                     )
-        for i in range(self.num_player):
+        for k in range(self.num_player):
             # print(*self.track[0][1:4])
-            self.cars[i] = Car(self.world, *self.track[0][1:4], i)
+            self.cars[k] = Car(self.world, *self.track[0][1:4], k)
 
         # Draw the background for rendering
         if self.playground is not None:
@@ -506,11 +507,8 @@ class CarRacing(gym.Env, EzPickle):
     @staticmethod
     def process_action(a):
         a0 = max(min(a[0], 1), -1)
-        a1 = max(min(a[1], 1), -1)
-        a2 = max(min(a[2], 1), -1)
-
-        a1 = (a1 + 1) / 2
-        a2 = (a2 + 1) / 2
+        a1 = max(min(a[1], 1), 0)
+        a2 = max(min(a[2], 1), 0)
         return a0, a1, a2
 
     def step(self, action):
@@ -827,10 +825,10 @@ class CarRacing(gym.Env, EzPickle):
 
         elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")
-            for i in range(self.num_player):
-                self.cars[i].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset,
+            for k in self.cars.keys():
+                self.cars[k].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset,
                                              angle=self.camera_angle,
-                                             scale=self.camera_scale, main_car_color=(drawing_for_player_num == i))
+                                             scale=self.camera_scale, main_car_color=(drawing_for_player_num == k))
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
 
         else:
