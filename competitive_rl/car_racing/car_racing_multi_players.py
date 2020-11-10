@@ -217,7 +217,7 @@ class CarRacing(gym.Env, EzPickle):
 
         self.fd_tile = None
 
-        self.action_space = spaces.Box(np.array([-1, 0, 0]),
+        self.action_space = spaces.Box(np.array([-1, -1, -1]),  # We will rescale acceleration and brake.
                                        np.array([+1, +1, +1]),
                                        dtype=np.float32)  # steer, gas, brake
         if num_player > 1:
@@ -503,6 +503,16 @@ class CarRacing(gym.Env, EzPickle):
         self.camera_update()
         return self.step(None)[0]
 
+    @staticmethod
+    def process_action(a):
+        a0 = max(min(a[0], 1), -1)
+        a1 = max(min(a[1], 1), -1)
+        a2 = max(min(a[2], 1), -1)
+
+        a1 = (a1 + 1) / 2
+        a2 = (a2 + 1) / 2
+        return a0, a1, a2
+
     def step(self, action):
         # If not in remote server
         # if pygame.display.get_init() and pygame.display.list_modes() != -1:
@@ -514,16 +524,17 @@ class CarRacing(gym.Env, EzPickle):
         if action is not None:
             if self.num_player > 1:
                 for k in self.cars:
-                    a = action[k]
-                    a = np.clip(a, -1, 1)
+                    a = self.process_action(action[k])
                     self.cars[k].steer(-a[0])
                     self.cars[k].gas(a[1])
                     self.cars[k].brake(a[2])
-            if self.num_player == 1:
-                action = np.clip(action, -1, 1)
+            elif self.num_player == 1:
+                self.process_action(action)
                 self.cars[0].steer(-action[0])
                 self.cars[0].gas(action[1])
                 self.cars[0].brake(action[2])
+            else:
+                raise ValueError()
 
         for _ in range(self.action_repeat):  # Action repetition
             for car in self.cars.values():
