@@ -81,6 +81,11 @@ initial_camera_angle = 0
 car_scale = 15
 num_player = 1
 
+DARK_COLOR = (0, 0, 51)
+MID_COLOR = (0, 40, 100)
+LIGHT_COLOR = (16, 87, 100)
+TILE_COLOR = (80, 80, 80)
+
 
 class FrictionDetector(contactListener):
     def __init__(self, env):
@@ -372,14 +377,19 @@ class CarRacing(gym.Env, EzPickle):
                 border[i - neg] |= border[i]
 
         # Create tiles
-        for i in range(len(track)):
+        for i in range(len(track) - 1, -1, -1):
             alpha1, beta1, x1, y1 = track[i]
             alpha2, beta2, x2, y2 = track[i - 1]
             road1_l = (x1 - TRACK_WIDTH * math.cos(beta1), y1 - TRACK_WIDTH * math.sin(beta1))
             road1_r = (x1 + TRACK_WIDTH * math.cos(beta1), y1 + TRACK_WIDTH * math.sin(beta1))
+            road_m = (
+                x1 - TRACK_WIDTH / 2 * math.cos(beta1 - math.pi / 2),
+                y1 - TRACK_WIDTH / 2 * math.sin(beta1 - math.pi / 2)
+            )
             road2_l = (x2 - TRACK_WIDTH * math.cos(beta2), y2 - TRACK_WIDTH * math.sin(beta2))
             road2_r = (x2 + TRACK_WIDTH * math.cos(beta2), y2 + TRACK_WIDTH * math.sin(beta2))
-            vertices = [road1_l, road1_r, road2_r, road2_l]
+            # vertices = [road1_l, road1_r, road2_r, road2_l]
+            vertices = [road1_l, road_m, road1_r, road2_r, road2_l]
             self.fd_tile.shape.vertices = vertices
             t = self.world.CreateStaticBody(fixtures=self.fd_tile)
             t.userData = t
@@ -392,7 +402,8 @@ class CarRacing(gym.Env, EzPickle):
             t.road_friction = 1.0
             t.fixtures[0].sensor = True
             self.road_poly.append(
-                ([road1_l, road1_r, road2_r, road2_l], t.color)
+                # ([road1_l, road1_r, road2_r, road2_l], t.color)
+                ([road1_l, road_m, road1_r, road2_r, road2_l], t.color)
             )
             self.road.append(t)
             if border[i]:
@@ -476,7 +487,6 @@ class CarRacing(gym.Env, EzPickle):
             # print(*self.track[0][1:4])
             self.cars.append(Car(self.world, *self.track[0][1:4], i))
 
-
         # Draw the background for rendering
         if self.playground is not None:
             self.render_road_for_world_map(self.playground)
@@ -540,13 +550,13 @@ class CarRacing(gym.Env, EzPickle):
                 if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
                     # print("car out of playfield")
                     self.done[i] = 1
+
                 # if self.ontrack_count >= 190:
                 #     print("Out of Road")
                 #     self.done[i] = 1
                 # step_rewards[i] = -50
-                if self.step_count > 800 and self.tile_visited_count[0] < 2:
-                    print("Killed, idle")
-                    step_rewards[i] = -100
+
+                if self.step_count > 1000:  # Maximum steps
                     self.done[i] = 1
 
         # Centralize the logic of rendering observation state into the step function
@@ -561,9 +571,9 @@ class CarRacing(gym.Env, EzPickle):
         # step_rewards = np.clip(step_rewards, -1, 1)
 
         if self.num_player == 1:
-            return self.obs[0], step_rewards[0], self.done[0], {}
+            return self.obs[0], step_rewards[0], self.done[0], {"num_steps": self.step_count}
 
-        return self.obs, step_rewards, self.done, {}
+        return self.obs, step_rewards, self.done, [{"num_steps": self.step_count} for _ in range(self.num_player)]
 
     def get_observation(self, agent_index):
         i = agent_index
