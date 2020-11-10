@@ -14,7 +14,14 @@ def register_car_racing():
             max_episode_steps=1000,
             reward_threshold=900
         )
-        print("Register cCarRacing-v0 environments.")
+        register(
+            id="cCarRacingDouble-v0",
+            entry_point=CarRacing,
+            kwargs=dict(verbose=0, num_player=2),
+            max_episode_steps=1000,
+            reward_threshold=900
+        )
+        print("Register cCarRacing-v0, cCarRacingDouble-v0 environments.")
     except gym.error.Error:
         pass
 

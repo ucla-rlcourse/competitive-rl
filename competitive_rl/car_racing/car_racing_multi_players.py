@@ -98,9 +98,9 @@ class FrictionDetector(contactListener):
         u2 = contact.fixtureB.body.userData
         if u1 and u2:
             if u1 and "car_number" in u1.__dict__ and u2 and "car_number" in u2.__dict__:
-                print("deduced")
-                self.env.rewards[u1.car_number] -= 1000 / FPS
-                self.env.rewards[u2.car_number] -= 1000 / FPS
+                # print("deduced")
+                self.env.rewards[u1.car_number] -= 1000 / FPS  # 20 points
+                self.env.rewards[u2.car_number] -= 1000 / FPS  # 20 points
                 return
 
     def EndContact(self, contact):
@@ -148,7 +148,7 @@ class CarRacing(gym.Env, EzPickle):
         'video.frames_per_second': FPS
     }
 
-    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE):
+    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE, action_repeat=4):
         EzPickle.__init__(self)
         self.seed(seed=seed)
         self.contactListener_keepref = FrictionDetector(self)
@@ -172,15 +172,16 @@ class CarRacing(gym.Env, EzPickle):
         self.invisible_state_window = None
         self.invisible_video_window = None
         self.road = None
-        self.cars = []
+        self.cars = {}
         self.rewards = [0] * num_player
         self.prev_rewards = [0] * num_player
         self.verbose = verbose
         self.num_player = num_player
         self.track = None
-        self.done = []
+        self.done = {}
         self.background = None
         self.road_poly = None
+        self.action_repeat = action_repeat
 
         self.camera_offset = None
         self.camera_scale = None
@@ -203,7 +204,7 @@ class CarRacing(gym.Env, EzPickle):
         self.world_size = 10000, 10000
 
         self.obs = {}
-        self.info = None
+        self.info = {}
 
         self.observation_playground = pygame.Surface(self.world_size)
         self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
@@ -219,6 +220,8 @@ class CarRacing(gym.Env, EzPickle):
         self.action_space = spaces.Box(np.array([-1, 0, 0]),
                                        np.array([+1, +1, +1]),
                                        dtype=np.float32)  # steer, gas, brake
+        if num_player > 1:
+            self.action_space = spaces.Dict({i: self.action_space for i in range(num_player)})
 
         self.observation_space = spaces.Box(
             low=0,
@@ -237,7 +240,7 @@ class CarRacing(gym.Env, EzPickle):
         for t in self.road:
             self.world.DestroyBody(t)
         self.road = []
-        self.cars = []
+        self.cars = {}
 
     def _create_track(self, use_local_track="", record_track_to=""):
         CHECKPOINTS = 12
@@ -460,7 +463,7 @@ class CarRacing(gym.Env, EzPickle):
         self.idle_count = 0
         self.step_count = 0
 
-        self.done = [0] * self.num_player
+        self.done = {x: False for x in range(self.num_player)}
         self.t = 0.0
         self.road_poly = []
         self.fd_tile = fixtureDef(
@@ -485,7 +488,7 @@ class CarRacing(gym.Env, EzPickle):
                     )
         for i in range(self.num_player):
             # print(*self.track[0][1:4])
-            self.cars.append(Car(self.world, *self.track[0][1:4], i))
+            self.cars[i] = Car(self.world, *self.track[0][1:4], i)
 
         # Draw the background for rendering
         if self.playground is not None:
@@ -494,15 +497,13 @@ class CarRacing(gym.Env, EzPickle):
         # Draw the background for observation
         self.observation_playground = self.render_road_for_observation_map(self.observation_playground)
 
-        self.info = ["" for x in range(self.num_player)]
+        self.info = {x: "" for x in range(self.num_player)}
 
         self.camera_follow = 0
         self.camera_update()
         return self.step(None)[0]
 
     def step(self, action):
-        if action is not None:
-            action = np.clip(action, -1, 1)
         # If not in remote server
         # if pygame.display.get_init() and pygame.display.list_modes() != -1:
         #     for event in pygame.event.get():
@@ -512,17 +513,20 @@ class CarRacing(gym.Env, EzPickle):
 
         if action is not None:
             if self.num_player > 1:
-                for i in range(len(self.cars)):
-                    self.cars[i].steer(-action[i][0])
-                    self.cars[i].gas(action[i][1])
-                    self.cars[i].brake(action[i][2])
+                for k in self.cars:
+                    a = action[k]
+                    a = np.clip(a, -1, 1)
+                    self.cars[k].steer(-a[0])
+                    self.cars[k].gas(a[1])
+                    self.cars[k].brake(a[2])
             if self.num_player == 1:
+                action = np.clip(action, -1, 1)
                 self.cars[0].steer(-action[0])
                 self.cars[0].gas(action[1])
                 self.cars[0].brake(action[2])
 
-        for _ in range(8):  # Action repetition
-            for car in self.cars:
+        for _ in range(self.action_repeat):  # Action repetition
+            for car in self.cars.values():
                 car.step(1.0 / FPS)
             self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
 
@@ -530,7 +534,7 @@ class CarRacing(gym.Env, EzPickle):
         self.ontrack_count += 1
         self.step_count += 1
 
-        step_rewards = [0] * self.num_player
+        step_rewards = {x: 0 for x in range(self.num_player)}
         if action is not None:  # First step without action, called from reset()
             for i in range(self.num_player):
                 self.rewards[i] -= 0.1
@@ -546,10 +550,10 @@ class CarRacing(gym.Env, EzPickle):
 
                 if self.tile_visited_count[i] == len(self.track):
                     # print("car finishs all tiles")
-                    self.done[i] = 1
+                    self.done[i] = True
                 if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
                     # print("car out of playfield")
-                    self.done[i] = 1
+                    self.done[i] = True
 
                 # if self.ontrack_count >= 190:
                 #     print("Out of Road")
@@ -557,7 +561,7 @@ class CarRacing(gym.Env, EzPickle):
                 # step_rewards[i] = -50
 
                 if self.step_count > 1000:  # Maximum steps
-                    self.done[i] = 1
+                    self.done[i] = True
 
         # Centralize the logic of rendering observation state into the step function
         original_follow = self.camera_follow
@@ -573,7 +577,7 @@ class CarRacing(gym.Env, EzPickle):
         if self.num_player == 1:
             return self.obs[0], step_rewards[0], self.done[0], {"num_steps": self.step_count}
 
-        return self.obs, step_rewards, self.done, [{"num_steps": self.step_count} for _ in range(self.num_player)]
+        return self.obs, step_rewards, self.done, {x: {"num_steps": self.step_count} for x in range(self.num_player)}
 
     def get_observation(self, agent_index):
         i = agent_index
@@ -586,12 +590,7 @@ class CarRacing(gym.Env, EzPickle):
 
         # Grayscale converting
         obs = obs[..., 0] * 0.299 + obs[..., 1] * 0.587 + obs[..., 2] * 0.114
-        # obs = np.dot(obs[..., :3], [0.299, 0.587, 0.114])
-        # np.testing.assert_almost_equal(obs, new_obs)
-
-        # Cropping
-        # obs = obs[15:70, 20:75]
-        obs = np.reshape(obs, self.observation_space.shape)
+        obs = np.reshape(obs, self.observation_space.shape).astype(np.uint8)
         return obs
 
     def close(self):
@@ -717,8 +716,8 @@ class CarRacing(gym.Env, EzPickle):
 
     def render_cars_for_world_map(self, screen):
         # surface = pygame.Surface([self.world_size[0], self.world_size[1]], pygame.SRCALPHA, 32)
-        for i in range(len(self.cars)):
-            self.cars[i].draw_for_world_map(screen, self.camera_scale, self.world_size[0], self.world_size[1])
+        for k in self.cars:
+            self.cars[k].draw_for_world_map(screen, self.camera_scale, self.world_size[0], self.world_size[1])
 
         return screen
 
@@ -797,7 +796,7 @@ class CarRacing(gym.Env, EzPickle):
             playground_surface = self.playground_surface
 
             self.camera_view(playground, playground_surface)
-            for car in self.cars:
+            for car in self.cars.values():
                 car.draw_for_pygame(playground_surface, width, height, offset=self.camera_offset,
                                     angle=self.camera_angle,
                                     scale=self.camera_scale, mode="human")
