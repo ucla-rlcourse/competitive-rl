@@ -218,9 +218,12 @@ class CarRacing(gym.Env, EzPickle):
 
         self.fd_tile = None
 
-        self.action_space = spaces.Box(np.array([-1, 0, 0]),  # We will rescale acceleration and brake.
-                                       np.array([+1, +1, +1]),
-                                       dtype=np.float32)  # steer, gas, brake
+        # self.action_space = spaces.Box(np.array([-1, 0, 0]),  # We will rescale acceleration and brake.
+        #                                np.array([+1, +1, +1]),
+        #                                dtype=np.float32)  # steer, gas, brake
+
+        self.action_space = spaces.Box(np.array([-1, -1]), np.array([+1, +1]), dtype=np.float32)
+
         if num_player > 1:
             self.action_space = spaces.Dict({i: self.action_space for i in range(num_player)})
 
@@ -507,8 +510,17 @@ class CarRacing(gym.Env, EzPickle):
     @staticmethod
     def process_action(a):
         a0 = max(min(a[0], 1), -1)
-        a1 = max(min(a[1], 1), 0)
-        a2 = max(min(a[2], 1), 0)
+        # a1 = max(min(a[1], 1), 0)
+        # a2 = max(min(a[2], 1), 0)
+
+        # We don't use three actions, we now use two actions.
+        a1 = max(min(a[1], 1), -1)
+        if a1 > 0:  # acceleration
+            a2 = 0
+        else:
+            a2 = a1
+            a1 = 0
+
         return a0, a1, a2
 
     def step(self, action):
@@ -527,10 +539,10 @@ class CarRacing(gym.Env, EzPickle):
                     self.cars[k].gas(a[1])
                     self.cars[k].brake(a[2])
             elif self.num_player == 1:
-                self.process_action(action)
-                self.cars[0].steer(-action[0])
-                self.cars[0].gas(action[1])
-                self.cars[0].brake(action[2])
+                a = self.process_action(action)
+                self.cars[0].steer(-a[0])
+                self.cars[0].gas(a[1])
+                self.cars[0].brake(a[2])
             else:
                 raise ValueError()
 
