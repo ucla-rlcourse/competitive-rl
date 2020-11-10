@@ -149,7 +149,7 @@ class CarRacing(gym.Env, EzPickle):
         'video.frames_per_second': FPS
     }
 
-    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE, action_repeat=1):
+    def __init__(self, num_player=1, verbose=1, seed=8367813160709901366, window_size=WINDOW_SIZE, action_repeat=None):
         EzPickle.__init__(self)
         self.seed(seed=seed)
         self.contactListener_keepref = FrictionDetector(self)
@@ -182,7 +182,7 @@ class CarRacing(gym.Env, EzPickle):
         self.done = {}
         self.background = None
         self.road_poly = None
-        self.action_repeat = action_repeat
+        self.action_repeat = action_repeat if action_repeat is not None else 8
 
         self.camera_offset = None
         self.camera_scale = None

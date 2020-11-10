@@ -26,11 +26,11 @@ def register_car_racing():
         pass
 
 
-def make_car_racing(env_id, seed, rank, frame_stack=None):
+def make_car_racing(env_id, seed, rank, frame_stack=None, action_repeat=None):
     assert "CarRacing" in env_id
 
     def _thunk():
-        env = gym.make(env_id)
+        env = gym.make(env_id, action_repeat=action_repeat)
         env.seed(seed + rank)
         if frame_stack is not None:
             env = FrameStack(env, frame_stack)
