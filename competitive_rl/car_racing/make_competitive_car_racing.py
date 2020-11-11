@@ -21,7 +21,8 @@ def make_competitive_car_racing(
             self.action_space = self.action_space[0]
 
         def step(self, action):
-            o, r, d, i = self.env.step({0: action, 1: self.opponent_action})
+            a = {0: action, 1: self.opponent_action}
+            o, r, d, i = self.env.step(a)
             self.opponent_action = self.opponent_policy(o[1])
 
             if not isinstance(d, dict):

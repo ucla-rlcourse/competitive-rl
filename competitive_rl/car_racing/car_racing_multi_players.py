@@ -522,7 +522,6 @@ class CarRacing(gym.Env, EzPickle):
         else:
             a2 = a1
             a1 = 0
-
         return a0, a1, a2
 
     def step(self, action):
