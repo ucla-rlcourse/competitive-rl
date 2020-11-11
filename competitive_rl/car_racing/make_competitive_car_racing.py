@@ -23,6 +23,11 @@ def make_competitive_car_racing(
         def step(self, action):
             o, r, d, i = self.env.step({0: action, 1: self.opponent_action})
             self.opponent_action = self.opponent_policy(o[1])
+
+            if not isinstance(d, dict):
+                # The TimeLimit wrapper will give pure boolean.
+                d = {k: d for k in o}
+
             return o[0], r[0], d[0], i[0]
 
         def reset(self, *args, **kwargs):

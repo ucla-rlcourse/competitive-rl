@@ -557,7 +557,7 @@ class CarRacing(gym.Env, EzPickle):
 
         step_rewards = {x: 0 for x in range(self.num_player)}
         if action is not None:  # First step without action, called from reset()
-            for i in range(self.num_player):
+            for i in self.cars.keys():
                 self.rewards[i] -= 0.1
                 # We actually don't want to count fuel spent, we want car to be faster.
                 # self.reward -=  10 * self.car.fuel_spent / ENGINE_POWER
@@ -572,6 +572,7 @@ class CarRacing(gym.Env, EzPickle):
                 if self.tile_visited_count[i] == len(self.track):
                     # print("car finishs all tiles")
                     self.done[i] = True
+
                 if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
                     # print("car out of playfield")
                     self.done[i] = True
@@ -594,7 +595,8 @@ class CarRacing(gym.Env, EzPickle):
 
         # Reward clipping
         # step_rewards = np.clip(step_rewards, -1, 1)
-
+        if not isinstance(self.done, dict):
+            print('s')
         if self.num_player == 1:
             return self.obs[0], step_rewards[0], self.done[0], {"num_steps": self.step_count}
 
