@@ -182,7 +182,7 @@ class CarRacing(gym.Env, EzPickle):
         self.done = {}
         self.background = None
         self.road_poly = None
-        self.action_repeat = action_repeat if action_repeat is not None else 8
+        self.action_repeat = action_repeat if action_repeat is not None else 1
 
         self.camera_offset = None
         self.camera_scale = None

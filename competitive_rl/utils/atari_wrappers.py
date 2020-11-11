@@ -25,6 +25,8 @@ class WrapPyTorch(gym.ObservationWrapper):
     def observation(self, observation):
         if isinstance(observation, tuple):
             return tuple(self.parse_single_frame(f) for f in observation)
+        elif isinstance(observation, dict):
+            return {k: self.parse_single_frame(f) for k, f in observation.items()}
         else:
             return self.parse_single_frame(observation)
 
@@ -252,6 +254,52 @@ class FrameStack(gym.Wrapper):
     def _get_ob(self):
         assert len(self.frames) == self.n_frames
         return np.stack(self.frames, axis=2).squeeze(-1)
+
+
+class MultipleFrameStack(gym.Wrapper):
+    def __init__(self, env, n_frames):
+        """Stack n_frames last frames.
+
+        Returns lazy array, which is much more memory efficient.
+
+        See Also
+        --------
+        stable_baselines.common.atari_wrappers.LazyFrames
+
+        :param env: (Gym Environment) the environment
+        :param n_frames: (int) the number of frames to stack
+        """
+        from collections import defaultdict
+        gym.Wrapper.__init__(self, env)
+        self.n_frames = n_frames
+        self.frames_dict = defaultdict(lambda: deque([], maxlen=n_frames))
+        shp = env.observation_space.shape
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=(shp[0], shp[1], shp[2] * n_frames),
+            dtype=env.observation_space.dtype
+        )
+
+    def reset(self):
+        obs = self.env.reset()
+        assert isinstance(obs, dict)
+        for k in obs:
+            for _ in range(self.n_frames):
+                self.frames_dict[k].append(obs[k])
+        return self._get_ob(obs.keys())
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        for k in obs:
+            self.frames_dict[k].append(obs[k])
+        return self._get_ob(obs.keys()), reward, done, info
+
+    def _get_ob(self, keys):
+        ret = dict()
+        for k in keys:
+            ret[k] = np.stack(self.frames_dict[k], axis=2).squeeze(-1)
+        return ret
 
 
 def make_atari(env_id):

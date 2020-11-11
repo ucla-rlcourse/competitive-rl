@@ -2,7 +2,7 @@ import gym
 
 from competitive_rl.register import register_competitive_envs
 from competitive_rl.utils import DummyVecEnv, SubprocVecEnv
-from competitive_rl.utils.atari_wrappers import WrapPyTorch, FrameStack
+from competitive_rl.utils.atari_wrappers import WrapPyTorch, MultipleFrameStack
 
 register_competitive_envs()
 
@@ -36,10 +36,10 @@ def make_competitive_car_racing(
         def _thunk():
             env = gym.make(env_id, action_repeat=action_repeat)
             env.seed(seed + rank)
-            env = CarRacingWrapper(env)
             if frame_stack is not None:
-                env = FrameStack(env, frame_stack)
+                env = MultipleFrameStack(env, frame_stack)
             env = WrapPyTorch(env)
+            env = CarRacingWrapper(env)
             return env
 
         return _thunk
