@@ -490,9 +490,11 @@ class CarRacing(gym.Env, EzPickle):
                         "retry to generate track (normal if there are not many"
                         "instances of this message)"
                     )
+        birth_place_indices = np.arange(self.num_player)
+        np.random.shuffle(birth_place_indices)
         for k in range(self.num_player):
             # print(*self.track[0][1:4])
-            self.cars[k] = Car(self.world, *self.track[0][1:4], k)
+            self.cars[k] = Car(self.world, *self.track[0][1:4], k, birth_place_index=birth_place_indices[k])
 
         # Draw the background for rendering
         if self.playground is not None:
@@ -819,10 +821,10 @@ class CarRacing(gym.Env, EzPickle):
             playground_surface = self.playground_surface
 
             self.camera_view(playground, playground_surface)
-            for car in self.cars.values():
+            for k, car in self.cars.items():
                 car.draw_for_pygame(playground_surface, width, height, offset=self.camera_offset,
                                     angle=self.camera_angle,
-                                    scale=self.camera_scale, mode="human")
+                                    scale=self.camera_scale, mode="human", main_car_color=k == 0)
 
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
             self.screen.blit(playground_surface, (0, 0))

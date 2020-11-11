@@ -52,10 +52,10 @@ MUD_COLOR = (0.4, 0.4, 0.0)
 
 
 class Car:
-    def __init__(self, world, init_angle, init_x, init_y, car_number):
+    def __init__(self, world, init_angle, init_x, init_y, car_number, birth_place_index):
         # Handle the position of multiplayer, avoid overlapping at the beginning
-        init_x -= car_number % 2 * 5
-        init_y -= math.floor(car_number / 2) * 10
+        init_x -= birth_place_index % 2 * 10
+        init_y -= math.floor(birth_place_index / 2) * 10
 
         self.world = world
         self.hull = self.world.CreateDynamicBody(
@@ -76,6 +76,7 @@ class Car:
         self.fuel_spent = 0.0
 
         self.image = pygame.image.load(f"{os.path.dirname(__file__)}/car.png")
+        self.image2 = pygame.image.load(f"{os.path.dirname(__file__)}/car2.png")
 
         self.ob_image = pygame.transform.scale(self.image, (3, 5))
 
@@ -263,7 +264,12 @@ class Car:
             tmp = Box2D.b2Transform()
             tmp.position = (0, 0)
             tmp.angle = -angle
-            image = self.image
+
+            if main_car_color:
+                image = self.image
+            else:
+                image = self.image2
+
             image = pygame.transform.rotate(image, 57.295779513 * (-self.hull.angle + angle))
             pos = self.hull.position
             center = image.get_rect().center
