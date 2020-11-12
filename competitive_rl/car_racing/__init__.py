@@ -1,2 +1,2 @@
-from competitive_rl.car_racing.register import register_car_racing, make_car_racing
+from competitive_rl.car_racing.register import register_car_racing, make_car_racing, make_car_racing_double
 from competitive_rl.car_racing.make_competitive_car_racing import make_competitive_car_racing

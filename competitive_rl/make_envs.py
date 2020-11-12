@@ -28,7 +28,7 @@ import warnings
 
 import gym
 
-from competitive_rl.car_racing import make_car_racing
+from competitive_rl.car_racing import make_car_racing, make_car_racing_double
 from competitive_rl.pong.competitive_pong_env import TournamentEnvWrapper
 from competitive_rl.register import register_competitive_envs
 from competitive_rl.utils import DummyVecEnv, SubprocVecEnv, make_env_a2c_atari
@@ -103,6 +103,9 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronou
                 range(num_envs)]
     elif env_id == "cPong-v0":
         envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim, frame_stack) for i in range(num_envs)]
+    elif env_id == "cCarRacingDouble-v0":
+        envs = [make_car_racing_double(seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
+                range(num_envs)]
     else:
         envs = [lambda: gym.make(env_id) for i in range(num_envs)]
 

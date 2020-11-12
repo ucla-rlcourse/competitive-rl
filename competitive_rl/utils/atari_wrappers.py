@@ -302,6 +302,35 @@ class MultipleFrameStack(gym.Wrapper):
         return ret
 
 
+class FlattenMultiAgentObservation(gym.Wrapper):
+    def __init__(self, env, resized_dim=84):
+        gym.Wrapper.__init__(self, env)
+        assert isinstance(self.action_space, gym.spaces.Dict)
+        self.num_players = len(self.action_space.spaces)
+        # We should use Dict observation space. But now only use a Box.
+        new_shape = list(self.observation_space.shape)
+        new_shape[2] = new_shape[2] * len(self.action_space.spaces)
+        self.observation_space = spaces.Box(low=0, high=255, shape=new_shape, dtype=self.observation_space.dtype)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(self.num_players, 2), dtype=self.action_space[0].dtype)
+
+    def reset(self, **kwargs):
+        o = self.env.reset(**kwargs)
+        return self._get_obs(o)
+
+    def step(self, action):
+        assert len(action) == self.num_players, (len(action), action)
+        action = {k: action[k] for k in range(self.num_players)}
+        o, r, d, i = self.env.step(action)
+        for k in r:
+            i[k]["reward"] = r[k]
+        if isinstance(d, dict):
+            d = any(d.values())
+        return self._get_obs(o), r[0], d, i
+
+    def _get_obs(self, frame):
+        return np.concatenate([f for f in frame.values()], axis=2)
+
+
 def make_atari(env_id):
     """
     Create a wrapped atari Environment

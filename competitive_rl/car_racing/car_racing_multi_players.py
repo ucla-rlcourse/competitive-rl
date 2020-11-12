@@ -223,16 +223,17 @@ class CarRacing(gym.Env, EzPickle):
         #                                dtype=np.float32)  # steer, gas, brake
 
         self.action_space = spaces.Box(np.array([-1, -1]), np.array([+1, +1]), dtype=np.float32)
-
-        if num_player > 1:
-            self.action_space = spaces.Dict({i: self.action_space for i in range(num_player)})
-
         self.observation_space = spaces.Box(
             low=0,
             high=255,
             shape=(STATE_W, STATE_H, 1),
             dtype=np.uint8
         )
+        if num_player > 1:
+            self.action_space = spaces.Dict({i: self.action_space for i in range(num_player)})
+            # self.observation_space = spaces.Dict({i: self.observation_space for i in range(num_player)})
+
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)

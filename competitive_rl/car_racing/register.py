@@ -1,8 +1,8 @@
 import gym
-from gym.envs.registration import register
-
 from competitive_rl.car_racing.car_racing_multi_players import CarRacing
-from competitive_rl.utils.atari_wrappers import WrapPyTorch, FrameStack
+from competitive_rl.utils.atari_wrappers import FrameStack, WrapPyTorch, MultipleFrameStack, \
+    FlattenMultiAgentObservation
+from gym.envs.registration import register
 
 
 def register_car_racing():
@@ -34,6 +34,19 @@ def make_car_racing(env_id, seed, rank, frame_stack=None, action_repeat=None):
         env.seed(seed + rank)
         if frame_stack is not None:
             env = FrameStack(env, frame_stack)
+        env = WrapPyTorch(env)
+        return env
+
+    return _thunk
+
+
+def make_car_racing_double(seed, rank, frame_stack=None, action_repeat=None):
+    def _thunk():
+        env = gym.make("cCarRacingDouble-v0", action_repeat=action_repeat)
+        env.seed(seed + rank)
+        if frame_stack is not None:
+            env = MultipleFrameStack(env, frame_stack)
+        env = FlattenMultiAgentObservation(env)
         env = WrapPyTorch(env)
         return env
 
