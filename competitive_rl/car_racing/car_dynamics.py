@@ -54,7 +54,7 @@ MUD_COLOR = (0.4, 0.4, 0.0)
 class Car:
     def __init__(self, world, init_angle, init_x, init_y, car_number, birth_place_index):
         # Handle the position of multiplayer, avoid overlapping at the beginning
-        init_x -= birth_place_index % 2 * 10
+        init_x -= birth_place_index % 2 * 5
         init_y -= math.floor(birth_place_index / 2) * 10
 
         self.world = world

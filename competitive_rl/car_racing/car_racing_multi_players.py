@@ -94,14 +94,15 @@ class FrictionDetector(contactListener):
 
     def BeginContact(self, contact):
         self._contact(contact, True)
-        u1 = contact.fixtureA.body.userData
-        u2 = contact.fixtureB.body.userData
-        if u1 and u2:
-            if u1 and "car_number" in u1.__dict__ and u2 and "car_number" in u2.__dict__:
-                # print("deduced")
-                self.env.rewards[u1.car_number] -= 1000 / FPS  # 20 points
-                self.env.rewards[u2.car_number] -= 1000 / FPS  # 20 points
-                return
+        # Remove the collision penalty, to encourage aggressive behavior.
+        # u1 = contact.fixtureA.body.userData
+        # u2 = contact.fixtureB.body.userData
+        # if u1 and u2:
+        #     if u1 and "car_number" in u1.__dict__ and u2 and "car_number" in u2.__dict__:
+        #         # print("deduced")
+        #         self.env.rewards[u1.car_number] -= 1000 / FPS  # 20 points
+        #         self.env.rewards[u2.car_number] -= 1000 / FPS  # 20 points
+        #         return
 
     def EndContact(self, contact):
         self._contact(contact, False)
