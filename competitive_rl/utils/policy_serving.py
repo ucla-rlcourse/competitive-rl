@@ -4,8 +4,7 @@ import os
 import numpy as np
 import torch
 
-from competitive_rl.pong.utils import LightActorCritic, ActorCritic
-from competitive_rl.pong.utils import FrameStackTensor
+from competitive_rl.utils import LightActorCritic, ActorCritic, FrameStackTensor
 
 
 class Policy:

@@ -50,8 +50,7 @@ def evaluate_two_policies(compute_action0, compute_action1, env, num_episode,
     return gameResult0, gameResult1
 
 
-def evaluate_two_policies_in_batch(compute_action0, compute_action1, envs,
-                                   num_episodes):
+def evaluate_two_policies_in_batch(compute_action0, compute_action1, envs, num_episodes):
     gameResult0 = [0] * 4  # [0] Win [1] Draw [2] Lose [3] Cumulative Reward
     gameResult1 = [0] * 4  # [0] Win [1] Draw [2] Lose [3] Cumulative Reward
     episode_rewards = np.zeros([envs.num_envs, 2], dtype=np.float)
