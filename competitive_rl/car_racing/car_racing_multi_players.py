@@ -55,8 +55,6 @@ from competitive_rl.car_racing.controller import key_phrase
 from competitive_rl.car_racing.path_recorder import path_record, path_record_to_file, path_drawer
 from competitive_rl.car_racing.pygame_rendering import vertical_ind, horiz_ind, draw_text
 
-import matplotlib.path as mplPath
-
 STATE_W = 96   # less than Atari 160x192
 STATE_H = 96
 VIDEO_W = 600
