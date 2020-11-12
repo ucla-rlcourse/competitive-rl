@@ -55,6 +55,8 @@ from competitive_rl.car_racing.controller import key_phrase
 from competitive_rl.car_racing.path_recorder import path_record, path_record_to_file, path_drawer
 from competitive_rl.car_racing.pygame_rendering import vertical_ind, horiz_ind, draw_text
 
+import matplotlib.path as mplPath
+
 STATE_W = 96   # less than Atari 160x192
 STATE_H = 96
 VIDEO_W = 600
@@ -139,8 +141,15 @@ class FrictionDetector(contactListener):
         if begin:
             obj.tiles.add(tile)
             if not tile.road_visited[car_number]:
+                blk = self.env.block_visited[car_number]
+                last_blk = 0 if not blk else blk[-1]
+                #  The maximum block number allowed difference will be 5
+                if tile.block_id - last_blk < 5:
+                    self.env.block_visited[car_number].append(tile.block_id)
+                    self.env.rewards[car_number] += 5
+                else:
+                    print(f"Cannot skip > 5 nearest tiles\nLast visited tiles#{last_blk}")
                 tile.road_visited[car_number] = True
-                self.env.rewards[car_number] += 5
                 self.env.tile_visited_count[car_number] += 1
         else:
             obj.tiles.remove(tile)
@@ -177,6 +186,7 @@ class CarRacing(gym.Env, EzPickle):
         self.done = []
         self.background = None
         self.road_poly = None
+        self.block_visited = None
 
         self.camera_offset = None
         self.camera_scale = None
@@ -384,6 +394,7 @@ class CarRacing(gym.Env, EzPickle):
             self.fd_tile.shape.vertices = vertices
             t = self.world.CreateStaticBody(fixtures=self.fd_tile)
             t.userData = t
+            t.block_id = i
             c = 0.01*(i%3)
             t.color =[ROAD_COLOR[0] + c, ROAD_COLOR[1] + c, ROAD_COLOR[2] + c]
             '''t.color = []
@@ -427,6 +438,7 @@ class CarRacing(gym.Env, EzPickle):
             (0, 0),
             contactListener=self.contactListener_keepref
         )
+        self.block_visited = [[] for _ in range(self.num_player)]
         # Reset camera
         self.camera_offset = initial_camera_offset
         self.camera_scale = initial_camera_scale
@@ -478,10 +490,6 @@ class CarRacing(gym.Env, EzPickle):
         return self.step(None)[0]
 
     def step(self, action):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
         if action is not None:
             if self.num_player > 1 :
                 for i in range(len(self.cars)):
