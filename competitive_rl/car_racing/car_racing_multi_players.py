@@ -46,6 +46,7 @@ from gym.utils import seeding, EzPickle
 
 from competitive_rl.car_racing.car_dynamics import Car
 from competitive_rl.car_racing.pygame_rendering import vertical_ind, horiz_ind, draw_text
+from competitive_rl.controller import key_phrase
 
 pygame.init()
 pygame.font.init()
@@ -158,7 +159,7 @@ class CarRacing(gym.Env, EzPickle):
         if human_rendering:
             self.screen = pygame.display.set_mode(window_size)
         if human_rendering:
-            self.playground_surface = pygame.display.set_mode(window_size)
+            self.playground_surface = pygame.Surface(window_size)
         self.invisible_state_window = None
         self.invisible_video_window = None
         self.road = None
@@ -798,8 +799,9 @@ if __name__ == "__main__":
      a = [[0.0, 0.0, 0.0] for _ in range(2)]
      clock = pygame.time.Clock()
      while True:
-         #env.manage_input(key_phrase(a))
-         #env.render()
+
+         env.render()
+         env.manage_input(key_phrase(a))
          observation, reward, done, info = env.step(a)
          #if env.show_all_car_obs:
          #env.show_all_obs(observation)
