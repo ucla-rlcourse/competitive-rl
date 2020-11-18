@@ -256,7 +256,7 @@ class Car:
 
     def draw_for_pygame(self, screen, W_W, W_H, draw_particles=True, offset=(0, 0), angle=0, scale=1,
                         color=(0.8 * 255, 0, 0), mode=None, main_car_color=False):
-        if mode == "human":
+        if mode == "image":
             tmp = Box2D.b2Transform()
             tmp.position = (0, 0)
             tmp.angle = -angle
@@ -287,24 +287,23 @@ class Car:
                         pygame.draw.polygon(screen, color, path)
                 else:
                     pygame.draw.polygon(screen, [255 * i for i in obj.color], path)
-                # #object_to_draw.append(([255 * i for i in obj.color], path))
-                # if "phase" not in obj.__dict__: continue
-                # a1 = obj.phase
-                # a2 = obj.phase + 1.2  # radians
-                # s1 = math.sin(a1)
-                # s2 = math.sin(a2)
-                # c1 = math.cos(a1)
-                # c2 = math.cos(a2)
-                # if s1 > 0 and s2 > 0: continue
-                # if s1 > 0: c1 = np.sign(c1)
-                # if s2 > 0: c2 = np.sign(c2)
-                # white_poly = [
-                #     (-WHEEL_W*SIZE, +WHEEL_R*c1*SIZE), (+WHEEL_W*SIZE, +WHEEL_R*c1*SIZE),
-                #     (+WHEEL_W*SIZE, +WHEEL_R*c2*SIZE), (-WHEEL_W*SIZE, +WHEEL_R*c2*SIZE)
-                #     ]
-                # white_poly_path = [-scale*(tmp*((trans*v)-offset)) + (W_W/2, W_H/2) for v in white_poly]
-                # pygame.draw.polygon(screen, WHEEL_WHITE, white_poly_path)
-                # object_to_draw.append((WHEEL_WHITE, white_poly_path))
+                #object_to_draw.append(([255 * i for i in obj.color], path))
+                if "phase" not in obj.__dict__: continue
+                a1 = obj.phase
+                a2 = obj.phase + 1.2  # radians
+                s1 = math.sin(a1)
+                s2 = math.sin(a2)
+                c1 = math.cos(a1)
+                c2 = math.cos(a2)
+                if s1 > 0 and s2 > 0: continue
+                if s1 > 0: c1 = np.sign(c1)
+                if s2 > 0: c2 = np.sign(c2)
+                white_poly = [
+                    (-WHEEL_W*SIZE, +WHEEL_R*c1*SIZE), (+WHEEL_W*SIZE, +WHEEL_R*c1*SIZE),
+                    (+WHEEL_W*SIZE, +WHEEL_R*c2*SIZE), (-WHEEL_W*SIZE, +WHEEL_R*c2*SIZE)
+                    ]
+                white_poly_path = [-scale*(tmp*((trans*v)-offset)) + (W_W/2, W_H/2) for v in white_poly]
+                pygame.draw.polygon(screen, 255 * np.array(WHEEL_WHITE), white_poly_path)
 
     def draw_for_world_map(self, surface, world_scale, world_width, world_height):
         for obj in self.drawlist:
@@ -337,7 +336,7 @@ class Car:
                 ]
                 white_poly_path = [-world_scale * (((trans * v))) + (world_width / 2, world_height / 2) for v in
                                    white_poly]
-                pygame.draw.polygon(surface, WHEEL_WHITE, white_poly_path)
+                pygame.draw.polygon(surface, 255 * np.array(WHEEL_WHITE), white_poly_path)
 
     def _create_particle(self, point1, point2, grass):
         class Particle:
