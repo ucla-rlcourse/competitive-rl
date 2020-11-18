@@ -254,8 +254,8 @@ class Car:
                 ]
                 viewer.draw_polygon([trans * v for v in white_poly], color=WHEEL_WHITE)
 
-    def draw_for_pygame(self, screen, W_W, W_H, draw_particles=True, offset=(0, 0), angle=0, scale=1,
-                        color=(0.8 * 255, 0, 0), mode=None, main_car_color=False):
+    def draw_for_pygame(self, screen, W_W, W_H, global_playground, world_size, world_scale, draw_particles=True, offset=(0, 0), angle=0, scale=1,
+                        color=(0.8 * 255, 0, 0), mode=None, main_car_color=False,width = 5):
         if mode == "image":
             tmp = Box2D.b2Transform()
             tmp.position = (0, 0)
@@ -267,18 +267,19 @@ class Car:
             draw_pos = scale * (tmp * (Box2D.b2Vec2(offset) - pos))
             screen.blit(image, (draw_pos[0] - center[0] + W_W / 2, draw_pos[1] + W_H / 2 - center[1]))
             return
-
-        '''if draw_particles:
+        tmp = Box2D.b2Transform()
+        tmp.position = (0, 0)
+        tmp.angle = -angle
+        if draw_particles:
             for p in self.particles:
-                viewer.draw_polyline(p.poly, color=p.color, linewidth=5)'''
+                pygame.draw.lines(global_playground,255 * np.array(p.color),False,-world_scale * np.array(p.poly)+np.array(world_size)/2,width)
+
         # Following code for generating observation
         NON_MAIN_CAR_COLOR = (0, 0, 255)
         for obj in self.drawlist:
             for f in obj.fixtures:
                 trans = f.body.transform
-                tmp = Box2D.b2Transform()
-                tmp.position = (0, 0)
-                tmp.angle = -angle
+
                 path = [-scale * (tmp * ((trans * v) - offset)) + (W_W / 2, W_H / 2) for v in f.shape.vertices]
                 if "phase" not in obj.__dict__:
                     if not main_car_color:

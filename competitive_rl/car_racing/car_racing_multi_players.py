@@ -686,12 +686,12 @@ class CarRacing(gym.Env, EzPickle):
             pygame.draw.polygon(screen, [255 * i for i in color], path)
         return screen
 
-    def render_cars_for_world_map(self, screen):
+    '''def render_cars_for_world_map(self, screen):
         # surface = pygame.Surface([self.world_size[0], self.world_size[1]], pygame.SRCALPHA, 32)
         for i in range(len(self.cars)):
             self.cars[i].draw_for_world_map(screen, self.camera_scale, self.world_size[0], self.world_size[1])
 
-        return screen
+        return screen'''
 
     def camera_view(self, surface, screen, mode="human"):
 
@@ -758,9 +758,9 @@ class CarRacing(gym.Env, EzPickle):
             playground_surface = self.playground_surface
             self.camera_view(playground, playground_surface)
             for car in self.cars:
-                car.draw_for_pygame(playground_surface, width, height, offset=self.camera_offset,
+                car.draw_for_pygame(playground_surface, width, height, playground, self.world_size, self.world_scale, offset=self.camera_offset,
                                     angle=self.camera_angle,
-                                    scale=self.camera_scale, mode="human")
+                                    scale=self.camera_scale, mode="human",draw_particles=True)
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
             self.screen.blit(playground_surface, (0, 0))
             pygame.display.flip()
@@ -773,9 +773,9 @@ class CarRacing(gym.Env, EzPickle):
         elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")
             for i in range(self.num_player):
-                self.cars[i].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=(self.camera_offset),
+                self.cars[i].draw_for_pygame(playground_surface, STATE_W, STATE_H, self.observation_playground, self.obs_size, self.obs_scale,offset=(self.camera_offset),
                                              angle=self.camera_angle,
-                                             scale=self.camera_scale, main_car_color=(drawing_for_player_num == i))
+                                             scale=self.camera_scale, main_car_color=(drawing_for_player_num == i),draw_particles=True,width=1)
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
 
         else:
@@ -803,8 +803,8 @@ if __name__ == "__main__":
          env.render()
          env.manage_input(key_phrase(a))
          observation, reward, done, info = env.step(a)
-         #if env.show_all_car_obs:
-         #env.show_all_obs(observation)
+         if env.show_all_car_obs:
+            env.show_all_obs(observation)
          clock.tick(60)
          fps = clock.get_fps()
-         print(fps)
+         #print(fps)
