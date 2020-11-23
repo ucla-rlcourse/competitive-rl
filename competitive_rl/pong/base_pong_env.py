@@ -52,10 +52,6 @@ class PongSinglePlayerEnv(gym.Env):
 
     def _render(self, mode="human", close=False):
         if close:
-            if self._viewer is not None:
-                self._viewer.close()
-                self._viewer = None
-            pygame.quit()
             return
         img = self._get_screen_img()
         if mode == "rgb_array":
@@ -76,6 +72,14 @@ class PongSinglePlayerEnv(gym.Env):
     def _surface_to_img(self, surface):
         img = pygame.surfarray.array3d(surface).astype(np.uint8)
         return np.transpose(img, (1, 0, 2))
+
+    def close(self):
+        if self._viewer is not None:
+            self._viewer.close()
+            self._viewer = None
+        del self._game
+        pygame.display.quit()
+        pygame.quit()
 
 
 class PongDoublePlayerEnv(PongSinglePlayerEnv):
@@ -202,6 +206,7 @@ class PongGame:
                 bat_speed,
             )
         self._scoreboard = Scoreboard(20, 8, font_size=20)
+        self._score_left, self._score_right = 0, 0
 
         self.reset_game()
 
@@ -259,6 +264,9 @@ class PongGame:
 
     def draw_scoreboard(self, surface):
         self._scoreboard.draw(surface, self._score_left, self._score_right)
+
+    def __del__(self):
+        del self._scoreboard
 
 
 class Arena(pygame.sprite.Sprite):
@@ -470,12 +478,16 @@ class Scoreboard:
         self._font = pygame.font.Font("freesansbold.ttf", font_size)
 
     def draw(self, surface, score_left, score_right):
+        # print("In draw function, the input: ", surface, score_left, score_right)
         result_surf = self._font.render(
             "Score = %d : %d" % (score_left, score_right), True, BLACK
         )
         rect = result_surf.get_rect()
         rect.topleft = (self._x, self._y)
         surface.blit(result_surf, rect)
+
+    def __del__(self):
+        del self._font
 
 
 # Main function
