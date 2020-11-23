@@ -73,11 +73,7 @@ ROAD_COLOR = [0.4, 0.4, 0.4]
 
 WINDOW_SIZE = width, height = 1000, 800
 white = 255, 255, 255
-initial_camera_scale = 1
-tmp = Box2D.b2Transform()
-tmp.position = (0, 0)
-initial_camera_offset = tmp
-initial_camera_angle = 0
+
 car_scale = 15
 # num_player = 1
 
@@ -203,12 +199,21 @@ class CarRacing(gym.Env, EzPickle):
         # self.world_map = None
         self.world_scale = 10
         self.obs_scale = (self.world_scale / (100 / math.sqrt(96))) * 1.8
-        self.world_size = 10000, 10000
+        self.world_size = self.world_scale * 500 + window_size[0] * 2, self.world_scale * 400 + window_size[1] * 2
+        # self.world_size = 6000,6000
+        self.obs_size = (self.world_size[0] / (100 / math.sqrt(96))) * 1.8, (
+                    self.world_size[1] / (100 / math.sqrt(96))) * 1.8
+        # self.obs_size = 5000,5000
+        self.initial_camera_scale = self.obs_scale
+        tmp = Box2D.b2Transform()
+        tmp.position = (self.obs_size[0] / 2, self.obs_size[1] / 2)
+        self.initial_camera_offset = tmp
+        self.initial_camera_angle = 0
 
         self.obs = {}
         self.info = {}
 
-        self.observation_playground = pygame.Surface(self.world_size)
+        self.observation_playground = pygame.Surface(self.obs_size)
         self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
         # self.world_map = pygame.Surface(self.world_size)
 
@@ -447,11 +452,11 @@ class CarRacing(gym.Env, EzPickle):
             contactListener=self.contactListener_keepref
         )
         # Reset camera
-        self.camera_offset = initial_camera_offset
-        self.camera_scale = initial_camera_scale
-        self.camera_no_follow_scale = initial_camera_scale
+        self.camera_offset = self.initial_camera_offset
+        self.camera_scale = self.initial_camera_scale
+        self.camera_no_follow_scale = self.initial_camera_scale
         self.car_scale = car_scale
-        self.camera_angle = initial_camera_angle
+        self.camera_angle = self.initial_camera_angle
 
         # Reset rewards related
         if self.verbose == 1:
@@ -716,7 +721,7 @@ class CarRacing(gym.Env, EzPickle):
         return screen
 
     def render_road_for_observation_map(self, screen):
-        # screen = pygame.Surface(self.world_size)
+        # screen = pygame.Surface(self.obs_size)
         screen.fill((0.4 * 255, 0.8 * 255, 0.4 * 255))
         k = PLAYFIELD / 20.0
         square_to_draw = []
@@ -729,13 +734,13 @@ class CarRacing(gym.Env, EzPickle):
 
         for square in square_to_draw:
             path = [
-                (self.obs_scale * -v[0] + self.world_size[0] / 2, self.obs_scale * -v[1] + self.world_size[1] / 2)
+                (self.obs_scale * -v[0] + self.obs_size[0] / 2, self.obs_scale * -v[1] + self.obs_size[1] / 2)
                 for v in square]
             pygame.draw.polygon(screen, (0.4 * 255, 0.9 * 255, 0.4 * 255), path)
 
         for poly, color in self.road_poly:
             path = [
-                (self.obs_scale * -v[0] + self.world_size[0] / 2, self.obs_scale * -v[1] + self.world_size[1] / 2)
+                (self.obs_scale * -v[0] + self.obs_size[0] / 2, self.obs_scale * -v[1] + self.obs_size[1] / 2)
                 for v in poly]
             pygame.draw.polygon(screen, [255 * i for i in color], path)
         return screen
@@ -761,12 +766,12 @@ class CarRacing(gym.Env, EzPickle):
             width = STATE_W
             height = STATE_H
             pos = (
-                self.obs_scale * -pos[0] + self.world_size[0] / 2, self.obs_scale * -pos[1] + self.world_size[1] / 2)
+                self.obs_scale * -pos[0] + self.obs_size[0] / 2, self.obs_scale * -pos[1] + self.obs_size[1] / 2)
 
         else:
             raise ValueError("Wrong mode {} in camera_view".format(mode))
-
-        rect = pygame.Rect(pos[0] - width, pos[1] - height, 2 * width, 2 * height)
+        size = ((width / 2) ** 2 + (height / 2) ** 2) ** 0.5
+        rect = pygame.Rect(pos[0] - size, pos[1] - size, 2 * size, 2 * size)
 
         camera_view = surface.subsurface(rect)
         # camera_view.convert_alpha()
@@ -793,9 +798,9 @@ class CarRacing(gym.Env, EzPickle):
                 self.camera_angle = angle
                 self.camera_scale = self.world_scale
         else:
-            self.camera_offset = initial_camera_offset
-            self.camera_angle = initial_camera_angle
-            self.camera_scale = initial_camera_scale
+            self.camera_offset = self.initial_camera_offset
+            self.camera_angle = self.initial_camera_angle
+            self.camera_scale = self.initial_camera_scale
 
     def manage_input(self, input_number):
         if input_number != None:
@@ -823,9 +828,10 @@ class CarRacing(gym.Env, EzPickle):
 
             self.camera_view(playground, playground_surface)
             for k, car in self.cars.items():
-                car.draw_for_pygame(playground_surface, width, height, offset=self.camera_offset,
+                car.draw_for_pygame(playground_surface, width, height, playground, self.world_size, self.world_scale,
+                                    offset=self.camera_offset,
                                     angle=self.camera_angle,
-                                    scale=self.camera_scale, mode="human", main_car_color=k == 0)
+                                    scale=self.camera_scale, mode="human", draw_particles=True, main_car_color=k == 0)
 
             self.render_indicators_for_pygame(playground_surface, width=width, height=height)
             self.screen.blit(playground_surface, (0, 0))
@@ -843,9 +849,12 @@ class CarRacing(gym.Env, EzPickle):
         elif mode == "internal_rgb_array":
             self.camera_view(playground, playground_surface, mode="rgb_array")
             for k in self.cars.keys():
-                self.cars[k].draw_for_pygame(playground_surface, STATE_W, STATE_H, offset=self.camera_offset,
+                self.cars[k].draw_for_pygame(playground_surface, STATE_W, STATE_H, self.observation_playground,
+                                             self.obs_size, self.obs_scale, draw_particles=True,
+                                             offset=(self.camera_offset),
                                              angle=self.camera_angle,
-                                             scale=self.camera_scale, main_car_color=(drawing_for_player_num == k))
+                                             scale=self.camera_scale, main_car_color=(drawing_for_player_num == k),
+                                             width=1)
             self.render_indicators_for_pygame(playground_surface, width=STATE_W, height=STATE_H, scale=5)
 
         else:
@@ -854,7 +863,7 @@ class CarRacing(gym.Env, EzPickle):
     def show_all_obs(self, obs, grayscale=False):
         for i in range(self.num_player):
             if grayscale:
-                grayobs = np.dot(obs[i][..., :3], [0.299, 0.587, 0.114])
+                grayobs = np.dot(obs[..., :3], [0.299, 0.587, 0.114])
                 plt.imshow(grayobs, cmap=plt.get_cmap('gray'))
             else:
                 plt.imshow(obs[i])
@@ -862,18 +871,21 @@ class CarRacing(gym.Env, EzPickle):
         self.show_all_car_obs = False
 
 # if __name__ == "__main__":
-#     env = CarRacing(num_player=num_player)
+#     env = CarRacing(num_player=1)
 #     # example: env.reset(use_local_track="./track/test.json",record_track_to="")
 #     # example: env.reset(use_local_track="",record_track_to="./track")
 #     env.reset(use_local_track="",record_track_to="")
-#     a = [[0.0, 0.0, 0.0] for _ in range(num_player)]
+#     a = [[0.0, 0.0, 0.0] for _ in range(1)]
+#     a = [1,1,0]
 #     clock = pygame.time.Clock()
 #     while True:
-#         env.manage_input(key_phrase(a))
 #         env.render()
+#         env.manage_input(key_phrase(a))
 #         observation, reward, done, info = env.step(a)
-#         if env.show_all_car_obs:
-#             env.show_all_obs(observation)
+#
+#         #if env.show_all_car_obs:
+#         #plt.imshow(observation)
+#         env.show_all_obs(observation,grayscale=True)
 #         clock.tick(60)
 #         fps = clock.get_fps()
-#         print(fps)
+#         #print(fps)
