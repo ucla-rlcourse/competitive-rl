@@ -1,5 +1,4 @@
 
-<img align="right" width=200px  src="resources/repo-cover-racing.png" />
 <img align="right" width=300px  src="resources/repo-cover-large.gif" />
 
 
@@ -10,6 +9,7 @@ In this repo, we provide two interesting competitive RL environments:
 1. Competitive Pong (cPong): extends the classic Atari Game Pong into a competitive environment, where both side can be trainable agents.
 2. Comprtitive Car Racing (cCarRacing): The environment that allow multiple vehicles to run in the same map.
 
+<img  width=200px  src="resources/repo-cover-racing.png" />
 
 ## Installation
 
