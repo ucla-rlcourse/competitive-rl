@@ -202,7 +202,7 @@ class CarRacing(gym.Env, EzPickle):
         self.world_size = self.world_scale * 500 + window_size[0] * 2, self.world_scale * 400 + window_size[1] * 2
         # self.world_size = 6000,6000
         self.obs_size = (self.world_size[0] / (100 / math.sqrt(96))) * 1.8, (
-                    self.world_size[1] / (100 / math.sqrt(96))) * 1.8
+                self.world_size[1] / (100 / math.sqrt(96))) * 1.8
         # self.obs_size = 5000,5000
         self.initial_camera_scale = self.obs_scale
         tmp = Box2D.b2Transform()
@@ -238,8 +238,6 @@ class CarRacing(gym.Env, EzPickle):
         if num_player > 1:
             self.action_space = spaces.Dict({i: self.action_space for i in range(num_player)})
             # self.observation_space = spaces.Dict({i: self.observation_space for i in range(num_player)})
-
-
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)

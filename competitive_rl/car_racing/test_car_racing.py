@@ -1,5 +1,6 @@
-from competitive_rl.car_racing import make_car_racing, register_car_racing
 import gym
+
+from competitive_rl.car_racing import register_car_racing
 
 register_car_racing()
 
