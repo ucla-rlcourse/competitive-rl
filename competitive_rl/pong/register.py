@@ -5,7 +5,7 @@ from competitive_rl.pong.base_pong_env import PongSinglePlayerEnv, \
     PongDoublePlayerEnv
 
 
-def register_competitive_envs():
+def register_pong():
     try:
         register(
             id="cPong-v0",

@@ -1,10 +1,14 @@
 """
-This file defines a helper function to build gym environment.
+This file defines a helper function to build our environment.
 
 Usages:
     make_envs(
-        env_id="CUHKRLPong-v0", # Environment name, must in [CUHKRLPong-v0,
-                                # CUHKRLPongDouble-v0, CartPole-v0].
+        env_id="cPong-v0",      # Environment name, must in [
+                                    "cPongTournament-v0",
+                                    "cPongDouble-v0",
+                                    "cPong-v0",
+                                    "CartPole-v0"
+                                    ].
         seed=0,                 # Random seed
         log_dir="data",         # Which directory to store data and checkpoints
         num_envs=5,             # How many concurrent environments to run
@@ -14,14 +18,9 @@ Usages:
     )
 
 Notes:
-1. If you wish to use asynchronous environments, you should run it in python
-scripts under "if __name__ == '__main__'" line.
-2. CartPole-v0 environment can be used for testing algorithms.
-
------
-2019-2020 2nd term, IERG 6130: Reinforcement Learning and Beyond. Department
-of Information Engineering, The Chinese University of Hong Kong. Course
-Instructor: Professor ZHOU Bolei. Assignment author: PENG Zhenghao.
+    1. If you wish to use asynchronous environments, you should run it in python
+        scripts under "if __name__ == '__main__'" line.
+    2. CartPole-v0 environment can be used for testing algorithms.
 """
 import os
 import shutil
@@ -29,10 +28,10 @@ import warnings
 
 import gym
 
+from competitive_rl.car_racing import make_car_racing, make_car_racing_double
 from competitive_rl.pong.competitive_pong_env import TournamentEnvWrapper
-from competitive_rl.pong.register import register_competitive_envs
-from competitive_rl.pong.utils import DummyVecEnv, SubprocVecEnv
-from competitive_rl.pong.utils import make_env_a2c_atari
+from competitive_rl.register import register_competitive_envs
+from competitive_rl.utils import DummyVecEnv, SubprocVecEnv, make_env_a2c_atari
 
 register_competitive_envs()
 
@@ -43,13 +42,13 @@ Multiprocessing vectorized environments need to be created under
 "if __name__ == '__main__'" line due to the limitation of multiprocessing 
 module. 
 
-If you are testing codes within interactive interface like jupyter 
-notebook, please set the num_envs to 1, i.e. make_envs(num_envs=1) to avoid 
-such error. We return envs = None now.
+If you are testing codes within interactive interface like jupyter notebook, please set the num_envs to 1, 
+i.e. make_envs(num_envs=1) to avoid such error. We return envs = None now.
 """
 
 
 def _verify_env_id(env_id):
+    """For compatibility reason, we allow using old names here."""
     replace_names = {
         "CompetitivePongTournament-v0": "cPongTournament-v0",
         "CompetitivePongDouble-v0": "cPongDouble-v0",
@@ -60,13 +59,13 @@ def _verify_env_id(env_id):
         warnings.warn(msg.format(env_id, replace_names[env_id]))
         env_id = replace_names[env_id]
     assert env_id in [
-        "cPongTournament-v0", "cPongDouble-v0", "cPong-v0", "CartPole-v0"
+        "cPongTournament-v0", "cPongDouble-v0", "cPong-v0", "CartPole-v0", "cCarRacing-v0", "cCarRacingDouble-v0"
     ]
     return env_id
 
 
-def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=5,
-              asynchronous=True, resized_dim=42):
+def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronous=False, resized_dim=42, frame_stack=4,
+              action_repeat=None):
     """
     Create CUHKPong-v0, CUHKPongDouble-v0 or CartPole-v0 environments. If
     num_envs > 1, put them into different processes.
@@ -83,7 +82,7 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=5,
     """
     asynchronous = asynchronous and num_envs > 1
 
-    env_id = _verify_env_id(env_id)
+    # env_id = _verify_env_id(env_id)
 
     if env_id == "CartPole-v0":
         print("Setup easy environment CartPole-v0 for testing.")
@@ -98,8 +97,18 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=5,
 
     if log_dir:
         os.makedirs(log_dir, exist_ok=True)
-    envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim) for i in
-            range(num_envs)]
+
+    if env_id == "cCarRacing-v0":
+        envs = [make_car_racing(env_id, seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
+                range(num_envs)]
+    elif env_id == "cPong-v0":
+        envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim, frame_stack) for i in range(num_envs)]
+    elif env_id == "cCarRacingDouble-v0":
+        envs = [make_car_racing_double(seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
+                range(num_envs)]
+    else:
+        envs = [lambda: gym.make(env_id) for i in range(num_envs)]
+
     if asynchronous:
         envs = SubprocVecEnv(envs)
     else:

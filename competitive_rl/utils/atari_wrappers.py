@@ -25,6 +25,8 @@ class WrapPyTorch(gym.ObservationWrapper):
     def observation(self, observation):
         if isinstance(observation, tuple):
             return tuple(self.parse_single_frame(f) for f in observation)
+        elif isinstance(observation, dict):
+            return {k: self.parse_single_frame(f) for k, f in observation.items()}
         else:
             return self.parse_single_frame(observation)
 
@@ -33,13 +35,15 @@ class WrapPyTorch(gym.ObservationWrapper):
         return frame.transpose(2, 0, 1)
 
 
-def make_env_a2c_atari(env_id, seed, rank, log_dir, resized_dim=84):
+def make_env_a2c_atari(env_id, seed, rank, log_dir, resized_dim=84, frame_stack=None):
     def _thunk():
         env = make_atari(env_id)
         env.seed(seed + rank)
         # if log_dir is not None:
         #     env = Monitor(env, os.path.join(log_dir, str(rank)))
         env = wrap_deepmind(env, resized_dim)
+        if frame_stack is not None:
+            env = FrameStack(env, frame_stack)
         env = WrapPyTorch(env)
         return env
 
@@ -232,7 +236,7 @@ class FrameStack(gym.Wrapper):
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(shp[0] * n_frames, shp[1], shp[2]),
+            shape=(shp[0], shp[1], shp[2] * n_frames),
             dtype=env.observation_space.dtype
         )
 
@@ -249,7 +253,82 @@ class FrameStack(gym.Wrapper):
 
     def _get_ob(self):
         assert len(self.frames) == self.n_frames
-        return np.stack(self.frames).swapaxes(0, 1)
+        return np.stack(self.frames, axis=2).squeeze(-1)
+
+
+class MultipleFrameStack(gym.Wrapper):
+    def __init__(self, env, n_frames):
+        """Stack n_frames last frames.
+
+        Returns lazy array, which is much more memory efficient.
+
+        See Also
+        --------
+        stable_baselines.common.atari_wrappers.LazyFrames
+
+        :param env: (Gym Environment) the environment
+        :param n_frames: (int) the number of frames to stack
+        """
+        from collections import defaultdict
+        gym.Wrapper.__init__(self, env)
+        self.n_frames = n_frames
+        self.frames_dict = defaultdict(lambda: deque([], maxlen=n_frames))
+        shp = env.observation_space.shape
+        self.observation_space = spaces.Box(
+            low=0,
+            high=255,
+            shape=(shp[0], shp[1], shp[2] * n_frames),
+            dtype=env.observation_space.dtype
+        )
+
+    def reset(self):
+        obs = self.env.reset()
+        assert isinstance(obs, dict)
+        for k in obs:
+            for _ in range(self.n_frames):
+                self.frames_dict[k].append(obs[k])
+        return self._get_ob(obs.keys())
+
+    def step(self, action):
+        obs, reward, done, info = self.env.step(action)
+        for k in obs:
+            self.frames_dict[k].append(obs[k])
+        return self._get_ob(obs.keys()), reward, done, info
+
+    def _get_ob(self, keys):
+        ret = dict()
+        for k in keys:
+            ret[k] = np.stack(self.frames_dict[k], axis=2).squeeze(-1)
+        return ret
+
+
+class FlattenMultiAgentObservation(gym.Wrapper):
+    def __init__(self, env, resized_dim=84):
+        gym.Wrapper.__init__(self, env)
+        assert isinstance(self.action_space, gym.spaces.Dict)
+        self.num_players = len(self.action_space.spaces)
+        # We should use Dict observation space. But now only use a Box.
+        new_shape = list(self.observation_space.shape)
+        new_shape[2] = new_shape[2] * len(self.action_space.spaces)
+        self.observation_space = spaces.Box(low=0, high=255, shape=new_shape, dtype=self.observation_space.dtype)
+        self.action_space = spaces.Box(low=-1, high=1, shape=(self.num_players, 2), dtype=self.action_space[0].dtype)
+
+    def reset(self, **kwargs):
+        o = self.env.reset(**kwargs)
+        return self._get_obs(o)
+
+    def step(self, action):
+        assert len(action) == self.num_players, (len(action), action)
+        action = {k: action[k] for k in range(self.num_players)}
+        o, r, d, i = self.env.step(action)
+        for k in r:
+            i[k]["reward"] = r[k]
+        if isinstance(d, dict):
+            d = any(d.values())
+        return self._get_obs(o), r[0], d, i
+
+    def _get_obs(self, frame):
+        return np.concatenate([f for f in frame.values()], axis=2)
 
 
 def make_atari(env_id):

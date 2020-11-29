@@ -29,6 +29,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
             elif cmd == 'render':
                 remote.send(env.render(*data[0], **data[1]))
             elif cmd == 'close':
+                env.close()
                 remote.close()
                 break
             elif cmd == 'get_spaces':
@@ -41,7 +42,7 @@ def _worker(remote, parent_remote, env_fn_wrapper):
             elif cmd == 'set_attr':
                 remote.send(setattr(env, data[0], data[1]))
             else:
-                raise NotImplementedError
+                raise NotImplementedError("`{}` is not implemented in the worker".format(cmd))
         except EOFError:
             break
 
@@ -91,16 +92,12 @@ class SubprocVecEnv(VecEnv):
             start_method = 'forkserver' if forkserver_available else 'spawn'
         ctx = multiprocessing.get_context(start_method)
 
-        self.remotes, self.work_remotes = zip(
-            *[ctx.Pipe(duplex=True) for _ in range(n_envs)])
+        self.remotes, self.work_remotes = zip(*[ctx.Pipe(duplex=True) for _ in range(n_envs)])
         self.processes = []
-        for work_remote, remote, env_fn in zip(self.work_remotes, self.remotes,
-                                               env_fns):
+        for work_remote, remote, env_fn in zip(self.work_remotes, self.remotes, env_fns):
             args = (work_remote, remote, CloudpickleWrapper(env_fn))
-            # daemon=True: if the main process crashes, we should not cause
-            # things to hang
-            process = ctx.Process(target=_worker, args=args,
-                                  daemon=True)  # pytype:disable=attribute-error
+            # daemon=True: if the main process crashes, we should not cause things to hang
+            process = ctx.Process(target=_worker, args=args, daemon=True)  # pytype:disable=attribute-error
             process.start()
             self.processes.append(process)
             work_remote.close()
@@ -118,8 +115,7 @@ class SubprocVecEnv(VecEnv):
         results = [remote.recv() for remote in self.remotes]
         self.waiting = False
         obs, rews, dones, infos = zip(*results)
-        return _flatten_obs(obs, self.observation_space), np.stack(
-            rews), np.stack(dones), infos
+        return _flatten_obs(obs, self.observation_space), np.stack(rews), np.stack(dones), infos
 
     def seed(self, seed=None):
         for idx, remote in enumerate(self.remotes):

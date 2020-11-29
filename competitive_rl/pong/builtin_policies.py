@@ -24,7 +24,7 @@ import gym
 import numpy as np
 
 from competitive_rl.pong.base_pong_env import CHEAT_CODES
-from competitive_rl.pong.utils.policy_serving import Policy
+from competitive_rl.utils.policy_serving import Policy
 
 BUILTIN_AGENT_NAMES = [
     "RANDOM",
@@ -59,7 +59,7 @@ def get_random_policy(num_envs=1):
 
 
 def get_compute_action_function(agent_name, num_envs=1):
-    resource_dir = osp.join(osp.dirname(osp.dirname(osp.dirname(__file__))), "resources")
+    resource_dir = osp.join(osp.dirname(osp.dirname(osp.dirname(__file__))), "resources", "pong")
     if agent_name == "STRONG":
         return Policy(
             single_obs_space, single_act_space, num_envs,

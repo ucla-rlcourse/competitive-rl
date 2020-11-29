@@ -1,13 +1,18 @@
 from setuptools import setup
 
 setup(
-    name="competitive_rl", version="0.0.1",
-    packages=['competitive_rl', 'competitive_rl.pong'],
+    name="competitive_rl", version="0.1.0",
+    packages=['competitive_rl', 'competitive_rl.pong', 'competitive_rl.car_racing', 'competitive_rl.utils'],
     install_requires=[
         "gym",
-        "pygame",
+        "pygame==1.9.6",
         "opencv-python",
         "numpy",
-        "pandas"
+        "pandas",
+        "pyyaml",
+        "tabulate",
+        "box2d-py~=2.3.5"  # Identical to gym[box2d]
     ]
 )
+
+print("You have successfully installed competitive_rl 0.1.0!")
