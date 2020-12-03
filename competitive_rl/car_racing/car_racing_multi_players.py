@@ -135,8 +135,15 @@ class FrictionDetector(contactListener):
         if begin:
             obj.tiles.add(tile)
             if not tile.road_visited[car_number]:
+                blk = self.env.block_visited[car_number]
+                last_blk = 0 if not blk else blk[-1]
+                #  The maximum block number allowed difference will be 50
+                if tile.block_id - last_blk < 50:
+                    self.env.block_visited[car_number].append(tile.block_id)
+                    self.env.rewards[car_number] += 1000.0 / len(self.env.track)
+                else:
+                    print(f"Cannot skip > 50 nearest tiles\nLast visited tiles#{last_blk}")
                 tile.road_visited[car_number] = True
-                self.env.rewards[car_number] += 1000.0 / len(self.env.track)
                 # print("Car {} finish tile {}. Info: {}".format(car_number, tile.position, (obj.position)))
                 # self.env.rewards[car_number] += 10
                 self.env.tile_visited_count[car_number] += 1
@@ -183,6 +190,7 @@ class CarRacing(gym.Env, EzPickle):
         self.done = {}
         self.background = None
         self.road_poly = None
+        self.block_visited = None
         self.action_repeat = action_repeat if action_repeat is not None else 1
 
         self.camera_offset = None
@@ -402,6 +410,7 @@ class CarRacing(gym.Env, EzPickle):
             self.fd_tile.shape.vertices = vertices
             t = self.world.CreateStaticBody(fixtures=self.fd_tile)
             t.userData = t
+            t.block_id = i
             c = 0.01 * (i % 3)
             t.color = [ROAD_COLOR[0] + c, ROAD_COLOR[1] + c, ROAD_COLOR[2] + c]
             '''t.color = []
@@ -446,6 +455,7 @@ class CarRacing(gym.Env, EzPickle):
             (0, 0),
             contactListener=self.contactListener_keepref
         )
+        self.block_visited = [[] for _ in range(self.num_player)]
         # Reset camera
         self.camera_offset = initial_camera_offset
         self.camera_scale = initial_camera_scale
