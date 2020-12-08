@@ -213,8 +213,8 @@ class CarRacing(gym.Env, EzPickle):
         # self.world_map = pygame.Surface(self.world_size)
 
         self.fonts = {
-            5: pygame.font.SysFont('Comic Sans MS', 5),
-            30: pygame.font.SysFont('Comic Sans MS', 30)
+            5: pygame.font.Font('fonts/COMIC.TTF', 5),
+            30: pygame.font.Font('fonts/COMIC.TTF', 30)
         }
 
         self.fd_tile = None
