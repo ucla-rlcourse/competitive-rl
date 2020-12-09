@@ -1,5 +1,6 @@
-
-<img align="right" width=300px  src="resources/repo-cover-large.gif" />
+<video width="320" controls><source src="https://github.com/cuhkrlcourse/cuhkrlcourse.github.io/blob/master/2020fall/Zikai-vs-Lixin-clip.mp4" type="video/mp4"></video>
+                
+<!-- <img align="right" width=300px  src="resources/repo-cover-large.gif" /> -->
 
 <img width=300px  src="resources/repo-cover-racing.png" />
 
