@@ -1,6 +1,6 @@
 
 
-<table border="0" width=1000px align="right" style="margin-bottom: 100px;">
+<table border="0" width=1000px align="center" style="margin-bottom: 100px;">
     <tr>
         <td align="center">
             <img align="center" width=300px  src="resources/repo-cover-large.gif" />
