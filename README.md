@@ -14,7 +14,7 @@
             <img align="center" width=300px  src="resources/repo-cover-large.gif" />
       </td>
         <td align="center">
-            <img align="center" width=500px  src="resources/repo-cover-racing.gif" />
+            <img align="center" width=450px  src="resources/repo-cover-racing.gif" />
       </td>
     </tr>
 </table>
