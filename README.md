@@ -1,4 +1,4 @@
-<table border="0" align="center">
+<table border="0" width=350px align="ight">
     <tr>
         <td align="center"><img align="center" width=300px  src="resources/repo-cover-large.gif" />
       </td>
