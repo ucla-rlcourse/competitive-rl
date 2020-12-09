@@ -1,4 +1,4 @@
-<img align="right" width=300px  src="resources/repo-cover-racing.gif" />
+<img align="left" width=300px  src="resources/repo-cover-racing.gif" />
 
 <img align="right" width=300px  src="resources/repo-cover-large.gif" />
 
