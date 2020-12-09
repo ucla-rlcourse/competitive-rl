@@ -3,21 +3,38 @@ import gym
 
 register_car_racing()
 
-if __name__ == '__main__':
-    # envs = make_car_racing("cCarRacing-v0", 0, 0)()
-    # obs = envs.reset()
-    # for _ in range(10000):
-    #     _, _, d, _ = envs.step(envs.action_space.sample())
-    #     envs.render("human")
-    #     if d:
-    #         envs.reset()
-    # print("Return obs shape: ", obs.shape)
-    # print("Return obs shape: ", obs.shape)
+
+def test_blackbox():
     e = gym.make("cCarRacing-v0")
     e.reset()
-    for _ in range(10000):
+    for _ in range(100):
         _, _, d, _ = e.step(e.action_space.sample())
         e.render("human")
         if d:
             e.reset()
     e.close()
+
+
+def test_action_repetition():
+    e = gym.make("cCarRacing-v0", action_repeat=1)
+    e.seed(0)
+    e.reset()
+    for _ in range(100 * 2):
+        e.render("human")
+        ret = e.step([0.0, 1])
+    print(ret)
+    e.close()
+
+    e = gym.make("cCarRacing-v0", action_repeat=5)
+    e.seed(0)
+    e.reset()
+    for _ in range(20 * 2):
+        e.render("human")
+        ret = e.step([0.0, 1])
+    print(ret)
+    e.close()
+
+
+if __name__ == '__main__':
+    test_blackbox()
+    test_action_repetition()

@@ -549,44 +549,45 @@ class CarRacing(gym.Env, EzPickle):
             else:
                 raise ValueError()
 
-        for _ in range(self.action_repeat):  # Action repetition
+        '''for _ in range(self.action_repeat):  # Action repetition
             for car in self.cars.values():
                 car.step(1.0 / FPS)
-            self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
+            self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)'''
 
-        self.t += 1.0 / FPS
+        '''self.t += 1.0 / FPS
         self.ontrack_count += 1
-        self.step_count += 1
+        self.step_count += 1'''
 
-        step_rewards = {x: 0 for x in range(self.num_player)}
+        step_rewards = {x: 0.0 for x in range(self.num_player)}
         if action is not None:  # First step without action, called from reset()
-            for i in self.cars.keys():
-                self.rewards[i] -= 0.1
-                # We actually don't want to count fuel spent, we want car to be faster.
-                # self.reward -=  10 * self.car.fuel_spent / ENGINE_POWER
-                self.cars[i].fuel_spent = 0.0
-                step_rewards[i] = self.rewards[i] - self.prev_rewards[i]
-                self.prev_rewards[i] = self.rewards[i]
-                x, y = self.cars[i].hull.position
+            for _ in range(self.action_repeat):  # Action repetition
+                for i in self.cars.keys():
+                    if self.done[i]:
+                        continue
+                    self.cars[i].step(1.0 / FPS)
+                    self.rewards[i] -= 0.1 / self.action_repeat
+                    # We actually don't want to count fuel spent, we want car to be faster.
+                    # self.reward -=  10 * self.car.fuel_spent / ENGINE_POWER
+                    self.cars[i].fuel_spent = 0.0
+                    step_rewards[i] += self.rewards[i] - self.prev_rewards[i]
+                    self.prev_rewards[i] = self.rewards[i]
+                    x, y = self.cars[i].hull.position
 
-                self.info[i] = f"P{i}: Tiles_visited: {self.tile_visited_count[i]} / {len(self.track)}, "
-                self.info[i] += f"rewards: {step_rewards[i]}"
+                    if self.tile_visited_count[i] == len(self.track):
+                        # print("car finishs all tiles")
+                        self.done[i] = True
 
-                if self.tile_visited_count[i] == len(self.track):
-                    # print("car finishs all tiles")
-                    self.done[i] = True
+                    if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
+                        # print("car out of playfield")
+                        self.done[i] = True
 
-                if abs(x) > PLAYFIELD or abs(y) > PLAYFIELD:
-                    # print("car out of playfield")
-                    self.done[i] = True
+                    if self.step_count > 1000:  # Maximum steps
+                        self.done[i] = True
 
-                # if self.ontrack_count >= 190:
-                #     print("Out of Road")
-                #     self.done[i] = 1
-                # step_rewards[i] = -50
-
-                if self.step_count > 1000:  # Maximum steps
-                    self.done[i] = True
+                self.world.Step(1.0 / FPS, 6 * 30, 2 * 30)
+                self.t += 1.0 / FPS
+                self.ontrack_count += 1
+                self.step_count += 1
 
         # Centralize the logic of rendering observation state into the step function
         original_follow = self.camera_follow
