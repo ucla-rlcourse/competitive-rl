@@ -1,4 +1,17 @@
-<img width=300px  src="resources/repo-cover-racing.gif" /><img align="right" width=300px  src="resources/repo-cover-large.gif" />
+<table border="0" align="center">
+    <tr>
+        <td align="center"><img align="center" width=300px  src="resources/repo-cover-large.gif" />
+      </td>
+    </tr>
+    <tr>
+        <td align="center"><img align="center" width=300px  src="resources/repo-cover-racing.gif" />
+      </td>
+    </tr>
+</table>
+    
+    
+    
+
 
 <br>
 
