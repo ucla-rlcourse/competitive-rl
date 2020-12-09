@@ -1,4 +1,4 @@
-<table border="0" width=350px align="right">
+<table border="0" width=1000px align="right" style="margin-bottom: 10em;">
     <tr>
         <td align="center"><img align="center" width=300px  src="resources/repo-cover-large.gif" />
       </td>
@@ -8,7 +8,7 @@
       </td>
     </tr>
 </table>
-    
+
 
 # Competitive RL Environments
 
