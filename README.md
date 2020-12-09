@@ -1,4 +1,17 @@
 
+
+<table border="0" width=1000px align="right" style="margin-bottom: 100px;">
+    <tr>
+        <td align="center">
+            <img align="center" width=300px  src="resources/repo-cover-large.gif" />
+      </td>
+        <td align="center">
+            <img align="center" width=300px  src="resources/repo-cover-racing.gif" />
+      </td>
+    </tr>
+</table>
+
+
 # Competitive RL Environments
 
 In this repo, we provide two interesting competitive RL environments:
@@ -7,16 +20,6 @@ In this repo, we provide two interesting competitive RL environments:
 2. Comprtitive Car Racing (cCarRacing): The environment that allow multiple vehicles to run in the same map.
 
 
-<table border="0" width=1000px align="right" style="margin-bottom: 100px;">
-    <tr>
-        <td align="center"><img align="center" width=300px  src="resources/repo-cover-large.gif" />
-      </td>
-    </tr>
-    <tr>
-        <td align="center"><img align="center" width=300px  src="resources/repo-cover-racing.gif" />
-      </td>
-    </tr>
-</table>
 
 ## Installation
 
