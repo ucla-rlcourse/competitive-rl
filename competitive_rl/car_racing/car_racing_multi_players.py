@@ -565,7 +565,7 @@ class CarRacing(gym.Env, EzPickle):
                     if self.done[i]:
                         continue
                     self.cars[i].step(1.0 / FPS)
-                    self.rewards[i] -= 0.1
+                    self.rewards[i] -= 0.1 / self.action_repeat
                     # We actually don't want to count fuel spent, we want car to be faster.
                     # self.reward -=  10 * self.car.fuel_spent / ENGINE_POWER
                     self.cars[i].fuel_spent = 0.0
