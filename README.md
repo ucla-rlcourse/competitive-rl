@@ -1,4 +1,4 @@
-<table border="0" width=1000px align="right" style="margin-bottom: 10em;">
+<table border="0" width=1000px align="right" style="margin-bottom: 100px;">
     <tr>
         <td align="center"><img align="center" width=300px  src="resources/repo-cover-large.gif" />
       </td>
@@ -8,6 +8,7 @@
       </td>
     </tr>
 </table>
+
 
 
 # Competitive RL Environments
@@ -54,3 +55,5 @@ The action spaces:
 2. `cPongDouble-v0`: `Tuple(Discrete(3), Discrete(3))`
 3. `cCarRacing-v0`: `Box(2,)`
 4. `cCarRacingDouble-v0`: `Dict(0:Box(2,), 1:Box(2,))`
+
+
