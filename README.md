@@ -9,17 +9,6 @@
     </tr>
 </table>
     
-    
-    
-
-
-<br>
-
-<br>
-
-<br>
-
-<br>
 
 # Competitive RL Environments
 
