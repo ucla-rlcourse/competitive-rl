@@ -1,7 +1,24 @@
 
-<img align="right" width=300px  src="resources/repo-cover-large.gif" />
 
-<img width=300px  src="resources/repo-cover-racing.png" />
+<table border="0" width=1000px align="center" style="margin-bottom: 100px;">
+        <tr>
+        <td align="center">
+            <b>Compeititive Pong</b>
+      </td>
+        <td align="center">
+            <b>Compeititive Car Racing</b>
+      </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <img align="center" width=300px  src="resources/repo-cover-large.gif" />
+      </td>
+        <td align="center" width=400px>
+            <img align="center" width=350px  src="resources/repo-cover-racing.gif" />
+      </td>
+    </tr>
+</table>
+
 
 # Competitive RL Environments
 
@@ -47,3 +64,5 @@ The action spaces:
 2. `cPongDouble-v0`: `Tuple(Discrete(3), Discrete(3))`
 3. `cCarRacing-v0`: `Box(2,)`
 4. `cCarRacingDouble-v0`: `Dict(0:Box(2,), 1:Box(2,))`
+
+
