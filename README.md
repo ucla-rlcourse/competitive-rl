@@ -6,7 +6,7 @@
             <b>Compeititive Pong</b>
       </td>
         <td align="center">
-            <b>Compeititive Car Racing</b>
+            <b>Compeititive Car-Racing</b>
       </td>
     </tr>
     <tr>
@@ -24,8 +24,8 @@
 
 In this repo, we provide two interesting competitive RL environments:
 
-1. Competitive Pong (cPong): extends the classic Atari Game Pong into a competitive environment, where both side can be trainable agents.
-2. Comprtitive Car Racing (cCarRacing): The environment that allow multiple vehicles to run in the same map.
+1. Competitive Pong (cPong): The environment extends the classic Atari Game Pong into a competitive environment, where both side can be trainable agents.
+2. Competitive Car-Racing (cCarRacing): The environment allows multiple cars to race and compete in the same map.
 
 
 
