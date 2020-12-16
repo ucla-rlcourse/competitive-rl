@@ -12,7 +12,8 @@ setup(
         "pyyaml",
         "tabulate",
         "box2d-py~=2.3.5"  # Identical to gym[box2d]
-    ]
+    ],
+    package_data={"competitive_rl": ["car_racing/fonts/*", "pong/*.ttf"]}
 )
 
 print("You have successfully installed competitive_rl 0.1.0!")

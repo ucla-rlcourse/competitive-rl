@@ -1,14 +1,31 @@
 
-<img align="right" width=300px  src="resources/repo-cover-large.gif" />
 
-<img width=300px  src="resources/repo-cover-racing.png" />
+<table border="0" width=1000px align="center" style="margin-bottom: 100px;">
+        <tr>
+        <td align="center">
+            <b>Compeititive Pong</b>
+      </td>
+        <td align="center">
+            <b>Compeititive Car-Racing</b>
+      </td>
+    </tr>
+    <tr>
+        <td align="center">
+            <img align="center" width=300px  src="resources/repo-cover-large.gif" />
+      </td>
+        <td align="center" width=400px>
+            <img align="center" width=350px  src="resources/repo-cover-racing.gif" />
+      </td>
+    </tr>
+</table>
+
 
 # Competitive RL Environments
 
 In this repo, we provide two interesting competitive RL environments:
 
-1. Competitive Pong (cPong): extends the classic Atari Game Pong into a competitive environment, where both side can be trainable agents.
-2. Comprtitive Car Racing (cCarRacing): The environment that allow multiple vehicles to run in the same map.
+1. Competitive Pong (cPong): The environment extends the classic Atari Game Pong into a competitive environment, where both side can be trainable agents.
+2. Competitive Car-Racing (cCarRacing): The environment allows multiple cars to race and compete in the same map.
 
 
 
@@ -48,6 +65,7 @@ The action spaces:
 3. `cCarRacing-v0`: `Box(2,)`
 4. `cCarRacingDouble-v0`: `Dict(0:Box(2,), 1:Box(2,))`
 
+
 ## Acknowledgement
 
 This repo is contributed by many students from CUHK:
@@ -59,3 +77,4 @@ This repo is contributed by many students from CUHK:
 * Joe Lam ([@JoeLamKC](https://github.com/JoeLamKC))
 
 Please enjoy this repo, and we welcome any contribution and further development! Thanks!
+
