@@ -47,3 +47,15 @@ The action spaces:
 2. `cPongDouble-v0`: `Tuple(Discrete(3), Discrete(3))`
 3. `cCarRacing-v0`: `Box(2,)`
 4. `cCarRacingDouble-v0`: `Dict(0:Box(2,), 1:Box(2,))`
+
+## Acknowledgement
+
+This repo is contributed by many students from CUHK:
+
+* Zhenghao Peng ([@pengzhenghao](https://github.com/pengzhenghao))
+* Edward Hui ([@Edwardhk](https://github.com/Edwardhk))
+* Yi Zhang ([@1155107756](https://github.com/1155107756))
+* Billy Ho ([@Poiutrew1004](https://github.com/Poiutrew1004))
+* Joe Lam ([@JoeLamKC](https://github.com/JoeLamKC))
+
+Please enjoy this repo, and we welcome any contribution and further development! Thanks!
