@@ -143,7 +143,8 @@ class FrictionDetector(contactListener):
                     self.env.block_visited[car_number].append(tile.block_id)
                     self.env.rewards[car_number] += 1000.0 / len(self.env.track)
                 else:
-                    print(f"Cannot skip > 50 nearest tiles\nLast visited tiles#{last_blk}")
+                    if self.verbose == 1:
+                        print(f"Cannot skip > 50 nearest tiles\nLast visited tiles#{last_blk}")
                 tile.road_visited[car_number] = True
                 # print("Car {} finish tile {}. Info: {}".format(car_number, tile.position, (obj.position)))
                 # self.env.rewards[car_number] += 10
