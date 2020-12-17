@@ -34,6 +34,7 @@ import datetime
 import json
 import math
 import time
+import os
 
 import Box2D
 import gym
@@ -220,9 +221,10 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
         # self.world_map = pygame.Surface(self.world_size)
 
+        font_file = f"{os.path.dirname(__file__)}/fonts/COMIC.TTF"
         self.fonts = {
-            5: pygame.font.Font('fonts/COMIC.TTF', 5),
-            30: pygame.font.Font('fonts/COMIC.TTF', 30)
+            5: pygame.font.Font(font_file, 5),
+            30: pygame.font.Font(font_file, 30)
         }
 
         self.fd_tile = None
