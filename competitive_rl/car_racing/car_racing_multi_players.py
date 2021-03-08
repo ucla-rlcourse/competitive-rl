@@ -34,6 +34,7 @@ import datetime
 import json
 import math
 import time
+import os
 
 import Box2D
 import gym
@@ -142,7 +143,8 @@ class FrictionDetector(contactListener):
                     self.env.block_visited[car_number].append(tile.block_id)
                     self.env.rewards[car_number] += 1000.0 / len(self.env.track)
                 else:
-                    print(f"Cannot skip > 50 nearest tiles\nLast visited tiles#{last_blk}")
+                    if self.verbose == 1:
+                        print(f"Cannot skip > 50 nearest tiles\nLast visited tiles#{last_blk}")
                 tile.road_visited[car_number] = True
                 # print("Car {} finish tile {}. Info: {}".format(car_number, tile.position, (obj.position)))
                 # self.env.rewards[car_number] += 10
@@ -220,9 +222,10 @@ class CarRacing(gym.Env, EzPickle):
         self.observation_screens = [pygame.Surface((STATE_W, STATE_H))] * self.num_player
         # self.world_map = pygame.Surface(self.world_size)
 
+        font_file = f"{os.path.dirname(__file__)}/fonts/COMIC.TTF"
         self.fonts = {
-            5: pygame.font.Font('fonts/COMIC.TTF', 5),
-            30: pygame.font.Font('fonts/COMIC.TTF', 30)
+            5: pygame.font.Font(font_file, 5),
+            30: pygame.font.Font(font_file, 30)
         }
 
         self.fd_tile = None
