@@ -101,7 +101,9 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronou
     if env_id == "cCarRacing-v0":
         envs = [make_car_racing(env_id, seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
                 range(num_envs)]
-    elif env_id == "cPong-v0":
+    elif env_id == "cPong-v0" or env_id == "cPongDouble-v0":
+        if env_id == "cPongDouble-v0":
+            assert frame_stack is None
         envs = [make_env_a2c_atari(env_id, seed, i, log_dir, resized_dim, frame_stack) for i in range(num_envs)]
     elif env_id == "cCarRacingDouble-v0":
         envs = [make_car_racing_double(seed, i, frame_stack=frame_stack, action_repeat=action_repeat) for i in
@@ -118,6 +120,13 @@ def make_envs(env_id="cPong-v0", seed=0, log_dir="data", num_envs=3, asynchronou
 
 if __name__ == '__main__':
     # Testing
+
+    double_envs = make_envs("cPongDouble-v0", num_envs=3,
+                            log_dir="tmp", asynchronous=False)
+    double_envs.reset()
+    double_obs, double_rew, double_done, double_info = double_envs.step(
+        [[0, 0], [1, 0], [2, 1]])
+
     tournament_envs = make_envs("cPongTournament-v0", num_envs=3,
                                 log_dir="tmp", asynchronous=True)
     tournament_envs.reset()
@@ -127,12 +136,6 @@ if __name__ == '__main__':
                             log_dir="tmp", asynchronous=True)
     double_envs.reset()
     double_obs_a, double_rew_a, double_done_a, double_info_a = double_envs.step(
-        [[0, 0], [1, 0], [2, 1]])
-
-    double_envs = make_envs("cPongDouble-v0", num_envs=3,
-                            log_dir="tmp", asynchronous=False)
-    double_envs.reset()
-    double_obs, double_rew, double_done, double_info = double_envs.step(
         [[0, 0], [1, 0], [2, 1]])
 
     envs = make_envs("cPong-v0", num_envs=3, log_dir="tmp",
