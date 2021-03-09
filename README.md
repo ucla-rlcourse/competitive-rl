@@ -68,6 +68,6 @@ The action spaces:
 
 ## Acknowledgement
 
-This repo is contributed by many students and alumni from CUHK: Zhenghao Peng ([@pengzhenghao](https://github.com/pengzhenghao)), Edward Hui ([@Edwardhk](https://github.com/Edwardhk)), Yi Zhang ([@1155107756](https://github.com/1155107756)), illy Ho ([@Poiutrew1004](https://github.com/Poiutrew1004)), Joe Lam ([@JoeLamKC](https://github.com/JoeLamKC))
+This repo is contributed by many students and alumni from CUHK: Zhenghao Peng ([@pengzhenghao](https://github.com/pengzhenghao)), Edward Hui ([@Edwardhk](https://github.com/Edwardhk)), Yi Zhang ([@1155107756](https://github.com/1155107756)), Billy Ho ([@Poiutrew1004](https://github.com/Poiutrew1004)), Joe Lam ([@JoeLamKC](https://github.com/JoeLamKC))
 
 
