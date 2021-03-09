@@ -27,11 +27,13 @@ class WrapPyTorch(gym.ObservationWrapper):
             return tuple(self.parse_single_frame(f) for f in observation)
         elif isinstance(observation, dict):
             return {k: self.parse_single_frame(f) for k, f in observation.items()}
+        elif isinstance(observation, np.ndarray) and observation.ndim == 4:
+            return np.stack([self.parse_single_frame(d) for d in observation])
         else:
             return self.parse_single_frame(observation)
 
     def parse_single_frame(self, frame):
-        assert frame.ndim == 3
+        assert frame.ndim == 3, frame.shape
         return frame.transpose(2, 0, 1)
 
 
@@ -43,6 +45,7 @@ def make_env_a2c_atari(env_id, seed, rank, log_dir, resized_dim=84, frame_stack=
         #     env = Monitor(env, os.path.join(log_dir, str(rank)))
         env = wrap_deepmind(env, resized_dim)
         if frame_stack is not None:
+            assert isinstance(frame_stack, int)
             env = FrameStack(env, frame_stack)
         env = WrapPyTorch(env)
         return env
