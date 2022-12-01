@@ -38,6 +38,21 @@ pip install git+https://github.com/cuhkrlcourse/competitive-rl.git
 
 ## Usage
 
+You can easily create the vectorized environment with this function:
+
+
+```python
+from competitive_rl import make_envs
+
+envs = make_envs("CompetitivePongDouble-v0", num_envs=num_envs, asynchronous=True)
+```
+
+See docs in [make_envs.py](https://github.com/ucla-rlcourse/competitive-rl/blob/master/competitive_rl/make_envs.py) for more information.
+
+Note that for Pong environment, since it is built based on Atari Pong game, we recommand following the standard pipeline to preprocess the observation. We should convert the image to grayscale, resize it and apply frame stacking. Please refer to [this function](https://github.com/ucla-rlcourse/competitive-rl/blob/6bf7d561f924f95e659a384d38f52d6642d20878/competitive_rl/utils/atari_wrappers.py#L349) and [our wrapper](https://github.com/ucla-rlcourse/competitive-rl/blob/6bf7d561f924f95e659a384d38f52d6642d20878/competitive_rl/utils/atari_wrappers.py#L40) for more information.
+
+If you want to create a single Gym environment instance:
+
 ```python
 import gym
 import competitive_rl
@@ -64,6 +79,8 @@ The action spaces:
 2. `cPongDouble-v0`: `Tuple(Discrete(3), Discrete(3))`
 3. `cCarRacing-v0`: `Box(2,)`
 4. `cCarRacingDouble-v0`: `Dict(0:Box(2,), 1:Box(2,))`
+
+
 
 
 ## Acknowledgement
